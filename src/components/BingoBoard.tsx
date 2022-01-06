@@ -10,9 +10,11 @@ import {
 import * as React from 'react'
 import styled from 'styled-components'
 import { COLORS } from '../utils/constants'
+import { Textfit } from 'react-textfit';
 
 interface Props {
     title: string
+    options?: string[]
 }
 
 interface BingoSquare {
@@ -33,7 +35,6 @@ const StyledCell = styled( TableCell )<StyledCellProps>`
     border: ${COLORS['grey-1']} solid 2px;
     border-radius: 2px;
     overflow: hidden;
-    font-size: 18pt;
     width: 120px;
     height: 120px;
     padding: 0;
@@ -49,6 +50,20 @@ const StyledCell = styled( TableCell )<StyledCellProps>`
         display: flex;
         align-items: center;
         justify-content: center;
+        > div {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            > div {
+                width: 100%;
+                height: 100%;
+                display: flex !important;
+                align-items: center;
+                justify-content: center;
+            }
+        }
     }
 `
 
@@ -59,7 +74,9 @@ const StyledText = styled( Text )`
 `
 
 const BingoBoard: React.FC<Props> = ( props ) => {
-    const [ board, setBoard ] = React.useState( newBoard( [] ) )
+    const [ board, setBoard ] = React.useState( newBoard( props.options || [] ) )
+
+    console.log( board )
 
     const toggleCell = ( row: number, col: number ) => {
         const newBoard = board.slice() as Board
@@ -88,7 +105,12 @@ const BingoBoard: React.FC<Props> = ( props ) => {
                                     align="center"
                                     onClick={() => toggleCell( rowIndex, cellIndex )}
                                     onMouseDown={( event: React.MouseEvent ) => event.preventDefault()}>
-                                    {cell?.content}
+                                    <Textfit
+                                        mode="multi"
+                                        max={25}>
+                                        {cell?.content}
+                                    </Textfit>
+                                    {/* {cell?.content} */}
                                 </StyledCell>
                             )}
                         </TableRow>
@@ -100,9 +122,10 @@ const BingoBoard: React.FC<Props> = ( props ) => {
 }
 
 const newBoard = ( options: string[] ): Board => {
+    console.log( "Creating new board." )
     if( options.length < 24 ) {
         console.error( "Provided less than 25 options.  Using random values" )
-        options = Array.from( Array( 24 ).keys() ).map( i => ""+i )
+        options = options.concat( Array.from( Array( 24 - options.length ).keys() ).map( i => ""+i ) )
     }
 
     console.log( options )
