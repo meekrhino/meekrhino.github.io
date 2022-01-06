@@ -14,13 +14,13 @@ const App = () => {
 
     /* Return App */
     return (
-        <Grommet theme={THEME} style={{ height: '100%' }}>
+        <Grommet theme={THEME} style={{ height: '100%', display: 'flex', justifyContent: "center" }}>
             <HashRouter>
                 <Switch>
                     <Route
                         exact
                         component={LydiaPage}
-                        path={`/`}
+                        path={`${Pages.LYDIA}`}
                     />
                     <Route
                         exact

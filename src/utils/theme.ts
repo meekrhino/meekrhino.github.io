@@ -43,5 +43,6 @@ export const THEME: ThemeType = {
         body: {
             border: "1px solid"
         }
+
     }
 }
