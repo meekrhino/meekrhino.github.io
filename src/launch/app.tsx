@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { BrowserRouter, Route, Switch } from 'react-router-dom'
+import { BrowserRouter, HashRouter, Route, Switch } from 'react-router-dom'
 import { Grommet } from 'grommet'
 import { Pages } from '../utils/constants'
 import { THEME } from '../utils/theme'
@@ -15,7 +15,7 @@ const App = () => {
     /* Return App */
     return (
         <Grommet theme={THEME} style={{ height: '100%' }}>
-            <BrowserRouter>
+            <HashRouter>
                 <Switch>
                     <Route
                         exact
@@ -29,7 +29,7 @@ const App = () => {
                     />
                     <Route path={Pages.ERROR} component={null} />
                 </Switch>
-            </BrowserRouter>
+            </HashRouter>
         </Grommet>
     )
 }
