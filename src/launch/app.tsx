@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Switch } from 'react-router-dom'
 import { Grommet } from 'grommet'
 import { Pages } from '../utils/constants'
 import { THEME } from '../utils/theme'
+import LydiaPage from '../pages/LydiaPage'
 
 /**
  * App component wraps everything in an AppWrapper
@@ -17,7 +18,7 @@ const App = () => {
                 <Switch>
                     <Route
                         exact
-                        component={null}
+                        component={LydiaPage}
                         path={`${Pages.LYDIA}`}
                     />
                     <Route
