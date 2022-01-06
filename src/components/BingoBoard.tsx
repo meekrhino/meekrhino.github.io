@@ -1,17 +1,16 @@
 import { Table, TableBody, TableCell, TableHeader, TableRow } from 'grommet'
 import * as React from 'react'
 
-const BingoBoard: React.FC = () => {
+interface Props {
+    title: string
+}
+
+const BingoBoard: React.FC<Props> = ( props ) => {
     return (
         <Table>
             <TableHeader>
                 <TableRow>
-                    <TableCell scope="col" border="bottom">
-                        Name
-                    </TableCell>
-                    <TableCell scope="col" border="bottom">
-                        Flavor
-                    </TableCell>
+                    {props.title}
                 </TableRow>
             </TableHeader>
             <TableBody>
@@ -19,13 +18,17 @@ const BingoBoard: React.FC = () => {
                     <TableCell scope="row">
                         <strong>Eric</strong>
                     </TableCell>
-                    <TableCell>Coconut</TableCell>
-                    </TableRow>
-                    <TableRow>
+                    <TableCell>
+                        Coconut
+                    </TableCell>
+                </TableRow>
+                <TableRow>
                     <TableCell scope="row">
                         <strong>Chris</strong>
                     </TableCell>
-                    <TableCell>Watermelon</TableCell>
+                    <TableCell>
+                        Watermelon
+                    </TableCell>
                 </TableRow>
             </TableBody>
         </Table>

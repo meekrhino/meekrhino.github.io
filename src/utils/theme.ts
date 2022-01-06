@@ -7,6 +7,9 @@ export const THEME: ThemeType = {
         colors: {
             ...COLORS
         },
+        font: {
+            family: "Arial"
+        },
         input: {
             weight: 400
         },
@@ -34,6 +37,11 @@ export const THEME: ThemeType = {
         },
         border: {
             radius: '8px'
+        }
+    },
+    table: {
+        body: {
+            border: "1px solid"
         }
     }
 }

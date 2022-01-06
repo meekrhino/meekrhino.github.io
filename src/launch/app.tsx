@@ -14,7 +14,7 @@ const App = () => {
     /* Return App */
     return (
         <Grommet theme={THEME} style={{ height: '100%' }}>
-            <BrowserRouter basename='/'>
+            <BrowserRouter>
                 <Switch>
                     <Route
                         exact
