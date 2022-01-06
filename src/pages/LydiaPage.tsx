@@ -35,7 +35,7 @@ const lydiaOptions: string[] = [
     "kraber headshot",
     "someone makes a joke about a literal misinterpretation of a word",
     "they have to decide whether to run around dog area",
-    "we get GOLD ARMOR or GOLD knockdown",
+    "we get GOLD armor or GOLD knockdown",
     "respawn bingo of some sort?",
     "purple on drop",
     "someone says 'purpleh' or another word incorrectly on purpose",
@@ -46,6 +46,11 @@ const lydiaOptions: string[] = [
     "friendly fire (accidentally shooting at teammate)",
     "'barkin in bed'",
     "lydia is not with the team for the beginning of the fight... so she has to ninja revive people",
+    "Punch knock",
+    "Lydia uses finisher successfully ",
+    "Lydia gets kill leader",
+    "Someone mentions a buff/nerf for a gun (not flatline)",
+    "Lydia rez fail (person being rezzed dies before it finishes)"
 ]
 
 export default LydiaPage
