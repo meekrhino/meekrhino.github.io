@@ -4,6 +4,7 @@ import { Grommet } from 'grommet'
 import { Pages } from '../utils/constants'
 import { THEME } from '../utils/theme'
 import LydiaPage from '../pages/LydiaPage'
+import DWPage from '../pages/DWPage'
 
 /**
  * App component wraps everything in an AppWrapper
@@ -23,7 +24,7 @@ const App = () => {
                     />
                     <Route
                         exact
-                        component={null}
+                        component={DWPage}
                         path={`${Pages.DIGIMON}`}
                     />
                     <Route path={Pages.ERROR} component={null} />
