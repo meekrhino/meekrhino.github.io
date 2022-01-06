@@ -1,7 +1,8 @@
 import * as React from 'react'
+import BingoBoard from '../components/BingoBoard'
 
-const LydiaPage: React.FC<void> = () => {
-    return <div>Hello, World!</div>
+const LydiaPage: React.FC = () => {
+    return <BingoBoard/>
 }
 
 export default LydiaPage
