@@ -1,11 +1,9 @@
 import {
     Box,
-    Button,
     Table,
     TableBody,
     TableCell,
     TableCellProps,
-    TableHeader,
     TableRow,
     Text
 } from 'grommet'
@@ -36,12 +34,21 @@ const StyledCell = styled( TableCell )<StyledCellProps>`
     border-radius: 2px;
     overflow: hidden;
     font-size: 18pt;
-    width: 100px;
-    height: 100px;
-    background: ${props => props.marked? COLORS['light-blue'] : undefined};
+    width: 120px;
+    height: 120px;
+    padding: 0;
+    background: ${props => props.marked? COLORS['blue'] : undefined};
+    color: ${props => props.marked? COLORS['grey-5'] : COLORS[ 'black' ]};
     :hover {
-        background: ${COLORS['very-light-blue']};
+        background: ${props => props.marked? COLORS['light-blue'] : COLORS['very-light-blue']};
         cursor: pointer;
+    }
+    > div {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 `
 
@@ -79,7 +86,8 @@ const BingoBoard: React.FC<Props> = ( props ) => {
                                     scope="row"
                                     marked={cell?.marked}
                                     align="center"
-                                    onClick={() => toggleCell( rowIndex, cellIndex )}>
+                                    onClick={() => toggleCell( rowIndex, cellIndex )}
+                                    onMouseDown={( event: React.MouseEvent ) => event.preventDefault()}>
                                     {cell?.content}
                                 </StyledCell>
                             )}
