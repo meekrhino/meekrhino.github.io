@@ -13,7 +13,6 @@ const LydiaPage: React.FC = () => {
     const history = useHistory()
 
     try {
-        console.log( seed )
         if( !seed ) {
             throw new Error()
         }
