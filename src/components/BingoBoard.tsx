@@ -11,15 +11,17 @@ import * as React from 'react'
 import styled from 'styled-components'
 import { COLORS } from '../utils/constants'
 import { Textfit } from 'react-textfit';
+import ReactTooltip from 'react-tooltip';
 
 interface Props {
     title: string
-    options?: string[]
+    options?: BingoOption[]
 }
 
 interface BingoSquare {
     marked: boolean
     content: string
+    tooltip?: string
     image?: string
 }
 
@@ -27,17 +29,26 @@ type Row = [BingoSquare, BingoSquare, BingoSquare, BingoSquare, BingoSquare]
 
 type Board = [Row, Row, Row, Row, Row]
 
+interface TooltippedOption {
+    text: string
+    tooltip: string
+}
+
+export type BingoOption = string | TooltippedOption
+
 interface StyledCellProps extends TableCellProps {
     marked: boolean
 }
+
+const size = "120px"
 
 const StyledCell = styled( TableCell )<StyledCellProps>`
     border: ${COLORS['grey-1']} solid 2px;
     border-radius: 2px;
     overflow: hidden;
-    width: 120px;
-    height: 120px;
-    padding: 0;
+    width: ${size};
+    height: ${size};
+    padding: 10px;
     background: ${props => props.marked? COLORS['blue'] : undefined};
     color: ${props => props.marked? COLORS['grey-5'] : COLORS[ 'black' ]};
     :hover {
@@ -62,9 +73,15 @@ const StyledCell = styled( TableCell )<StyledCellProps>`
                 display: flex !important;
                 align-items: center;
                 justify-content: center;
+                user-select: none;
             }
         }
     }
+`
+
+const StyledLink = styled.a`
+    margin: 20px;
+    font-size: 16pt;
 `
 
 const StyledText = styled( Text )`
@@ -72,6 +89,7 @@ const StyledText = styled( Text )`
     font-weight: 800;
     margin: 20px;
 `
+
 
 const BingoBoard: React.FC<Props> = ( props ) => {
     const [ board, setBoard ] = React.useState( newBoard( props.options || [] ) )
@@ -93,48 +111,58 @@ const BingoBoard: React.FC<Props> = ( props ) => {
             <StyledText>
                 {props.title}
             </StyledText>
+            <ReactTooltip
+                id="tooltip"
+                effect="solid"
+                delayShow={350}/>
             <Table style={{ borderCollapse: "separate", borderSpacing: "2px" }}>
                 <TableBody>
                     {board.map( ( row, rowIndex ) =>
                         <TableRow key={`bingo_row_${rowIndex}`}>
-                            {row.map( ( cell, cellIndex ) =>
-                                <StyledCell
+                            {row.map( ( cell, cellIndex ) => {
+                                return <StyledCell
                                     key={`bingo_cell_${cellIndex}`}
                                     scope="row"
                                     marked={cell?.marked}
                                     align="center"
                                     onClick={() => toggleCell( rowIndex, cellIndex )}
-                                    onMouseDown={( event: React.MouseEvent ) => event.preventDefault()}>
+                                    onMouseDown={( event: React.MouseEvent ) => event.preventDefault()}
+                                    data-for={cell?.tooltip? "tooltip" : undefined}
+                                    data-tip={cell?.tooltip || undefined}>
                                     <Textfit
                                         mode="multi"
                                         max={25}>
                                         {cell?.content}
                                     </Textfit>
-                                    {/* {cell?.content} */}
                                 </StyledCell>
-                            )}
+                            } )}
                         </TableRow>
                     )}
                 </TableBody>
             </Table>
+            <StyledLink href="https://docs.google.com/document/d/1Waefod2BSDOGfPOZQGCF1payGVe54fT8zIHIoMsuOog/edit?usp=sharing">
+                Rules and Glossary
+            </StyledLink>
         </Box>
     )
 }
 
-const newBoard = ( options: string[] ): Board => {
-    console.log( "Creating new board." )
+const newBoard = ( options: BingoOption[] ): Board => {
     if( options.length < 24 ) {
         console.error( "Provided less than 25 options.  Using random values" )
         options = options.concat( Array.from( Array( 24 - options.length ).keys() ).map( i => ""+i ) )
     }
 
-    console.log( options )
-
     options = options.sort( () => 0.5 - Math.random() ).slice( 0, 24 )
     options.splice( 12, 0, "Free Space" )
-
     const squares: BingoSquare[] = options.map( ( s ) => {
-        return { marked: false, content: s }
+
+        if( typeof s === "string" ) {
+            return { marked: false, content: s }
+        }
+        else {
+            return { marked: false, content: s.text, tooltip: s.tooltip }
+        }
     } )
 
     const board: Board = [
@@ -151,8 +179,6 @@ const newBoard = ( options: string[] ): Board => {
 
         board[ row ][ col ] = square
     } )
-
-    console.log( board )
 
     return board
 }
