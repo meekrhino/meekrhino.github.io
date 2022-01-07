@@ -11,12 +11,18 @@ import DWPage from '../pages/DWPage'
  * and Routes to desired views through the URL
  */
 const App = () => {
-
     /* Return App */
     return (
-        <Grommet theme={THEME} style={{ height: '100%', display: 'flex', justifyContent: "center" }}>
+        <Grommet
+            theme={THEME}
+            style={{ height: '100%', display: 'flex', justifyContent: "center" }}>
             <HashRouter>
                 <Switch>
+                    <Route
+                        exact
+                        component={LydiaPage}
+                        path={`${Pages.LYDIA}/seed=:seed`}
+                    />
                     <Route
                         exact
                         component={LydiaPage}

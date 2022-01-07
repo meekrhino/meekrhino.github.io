@@ -1,10 +1,34 @@
 import * as React from 'react'
+import { useHistory, useParams } from 'react-router-dom'
 import BingoBoard, { BingoOption } from '../components/BingoBoard'
+import { Pages } from '../utils/constants'
+
+interface LydiaPageParams {
+    seed: string
+}
 
 const LydiaPage: React.FC = () => {
-    return <BingoBoard
-                title="lydlbutton stream bingo"
-                options={lydiaOptions}/>
+    const { seed } = useParams<LydiaPageParams>()
+
+    const history = useHistory()
+
+    try {
+        console.log( seed )
+        if( !seed ) {
+            throw new Error()
+        }
+        const seedVal = parseInt( seed )
+        return <BingoBoard
+            title="lydlbutton stream bingo"
+            options={lydiaOptions}
+            seed={seed}/>
+    }
+    catch {
+        const newSeed = Math.floor( Math.random() * 1000 * 1000)
+        history.push( `${Pages.LYDIA}/seed=${newSeed}` )
+        return null
+    }
+
 }
 
 const lydiaOptions: BingoOption[] = [
@@ -51,6 +75,7 @@ const lydiaOptions: BingoOption[] = [
     { text: `Top Ten No Squads`, tooltip: `get to top 10 without finding any squads` },
     { text: `Ultimate Accelerant Ope!`, tooltip: `lydia cancels ultimate accelerant` },
     { text: `Your Refrigerator is Running`, tooltip: `someone makes a joke about a literal misinterpretation of a word` },
+    { text: `I HATE MIRAGE`, tooltip: `Lydia complains about how much she hates Mirage` }
 ]
 
 export default LydiaPage

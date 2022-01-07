@@ -1,5 +1,6 @@
 import {
     Box,
+    CheckBox,
     Table,
     TableBody,
     TableCell,
@@ -12,9 +13,11 @@ import styled from 'styled-components'
 import { COLORS } from '../utils/constants'
 import { Textfit } from 'react-textfit';
 import ReactTooltip from 'react-tooltip';
+import { newRand } from '../utils/rng';
 
 interface Props {
     title: string
+    seed: string
     options?: BingoOption[]
 }
 
@@ -40,7 +43,7 @@ interface StyledCellProps extends TableCellProps {
     marked: boolean
 }
 
-const size = "120px"
+const size = "7rem"
 
 const StyledCell = styled( TableCell )<StyledCellProps>`
     border: ${COLORS['grey-1']} solid 2px;
@@ -48,6 +51,7 @@ const StyledCell = styled( TableCell )<StyledCellProps>`
     overflow: hidden;
     width: ${size};
     height: ${size};
+    line-height: 1em;
     padding: 10px;
     background: ${props => props.marked? COLORS['blue'] : undefined};
     color: ${props => props.marked? COLORS['grey-5'] : COLORS[ 'black' ]};
@@ -92,9 +96,9 @@ const StyledText = styled( Text )`
 
 
 const BingoBoard: React.FC<Props> = ( props ) => {
-    const [ board, setBoard ] = React.useState( newBoard( props.options || [] ) )
+    const [ board, setBoard ] = React.useState( newBoard( props.options || [], props.seed ) )
 
-    console.log( board )
+    const [ info, setInfo ] = React.useState( false )
 
     const toggleCell = ( row: number, col: number ) => {
         const newBoard = board.slice() as Board
@@ -111,6 +115,10 @@ const BingoBoard: React.FC<Props> = ( props ) => {
             <StyledText>
                 {props.title}
             </StyledText>
+            <CheckBox
+                checked={info}
+                onChange={( e ) => setInfo( e.target.checked )}
+                label="Show Detailed Info" />
             <ReactTooltip
                 id="tooltip"
                 effect="solid"
@@ -120,6 +128,9 @@ const BingoBoard: React.FC<Props> = ( props ) => {
                     {board.map( ( row, rowIndex ) =>
                         <TableRow key={`bingo_row_${rowIndex}`}>
                             {row.map( ( cell, cellIndex ) => {
+                                const text = ( info && cell?.tooltip )? cell.tooltip : cell?.content
+                                const tooltip = cell?.tooltip? cell.tooltip: undefined
+
                                 return <StyledCell
                                     key={`bingo_cell_${cellIndex}`}
                                     scope="row"
@@ -127,12 +138,12 @@ const BingoBoard: React.FC<Props> = ( props ) => {
                                     align="center"
                                     onClick={() => toggleCell( rowIndex, cellIndex )}
                                     onMouseDown={( event: React.MouseEvent ) => event.preventDefault()}
-                                    data-for={cell?.tooltip? "tooltip" : undefined}
-                                    data-tip={cell?.tooltip || undefined}>
+                                    data-for={tooltip? "tooltip" : undefined}
+                                    data-tip={tooltip}>
                                     <Textfit
                                         mode="multi"
                                         max={25}>
-                                        {cell?.content}
+                                        {text}
                                     </Textfit>
                                 </StyledCell>
                             } )}
@@ -147,13 +158,15 @@ const BingoBoard: React.FC<Props> = ( props ) => {
     )
 }
 
-const newBoard = ( options: BingoOption[] ): Board => {
+const newBoard = ( options: BingoOption[], seed: string ): Board => {
+    const rand = newRand( seed )
+
     if( options.length < 24 ) {
         console.error( "Provided less than 25 options.  Using random values" )
         options = options.concat( Array.from( Array( 24 - options.length ).keys() ).map( i => ""+i ) )
     }
 
-    options = options.sort( () => 0.5 - Math.random() ).slice( 0, 24 )
+    options = options.sort( () => 0.5 - rand() ).slice( 0, 24 )
     options.splice( 12, 0, "Free Space" )
     const squares: BingoSquare[] = options.map( ( s ) => {
 
