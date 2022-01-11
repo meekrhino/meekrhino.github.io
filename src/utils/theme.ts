@@ -1,20 +1,22 @@
 import { ThemeType } from 'grommet'
-import { COLORS } from './constants'
+import { Colors } from './constants'
 
 /* Global Grommet theme */
 export const THEME: ThemeType = {
     global: {
         colors: {
-            ...COLORS
+            ...Colors
         },
         font: {
             family: "Arial"
         }
     },
     button: {
-        padding: {
-            horizontal: "5px",
-            vertical: "5px"
+        primary: {
+            padding: {
+                horizontal: "5px",
+                vertical: "5px"
+            }
         }
     }
 }

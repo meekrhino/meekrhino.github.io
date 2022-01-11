@@ -1,4 +1,5 @@
 import React = require("react");
+import { ColorType } from "grommet/utils"
 
 /* Store app name in a single location */
 export const APP_NAME = 'Bingo'
@@ -35,6 +36,17 @@ export const COLORS = {
     'grey-3': '#BDBDBD',
     'grey-4': '#E0E0E0',
     'grey-5': '#F2F2F2'
+}
+
+export const Colors: { [colors: string]: ColorType } = {
+    "text":         { dark: "#F2F2F2",  light: "#333333" },
+    "button":       { dark: "#CA222F",  light: "#7D4CDB" },
+    "background":   { dark: "#1c1c1c",  light: "#FFFFFF" },
+    "tile-border":  { dark: "#BDBDBD",  light: "#4F4F4F" },
+    "tile-1":       { dark: "#3F3F3F",  light: "#F2F2F2" },
+    "tile-2":       { dark: "#1FAFF0",  light: "#1FAFF0" },
+    "tile-3":       { dark: "#125AC9",  light: "#125AC9" },
+    "tile-4":       { dark: "#0B419E",  light: "#0B419E" },
 }
 
 export enum Pages {

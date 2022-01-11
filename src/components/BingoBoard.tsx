@@ -1,7 +1,7 @@
 import { Box, BoxProps } from 'grommet'
 import * as React from 'react'
 import styled from 'styled-components'
-import { COLORS } from '../utils/constants'
+import { Colors, COLORS } from '../utils/constants'
 import { Textfit } from 'react-textfit';
 import ReactTooltip from 'react-tooltip';
 import { newRand } from '../utils/rng';
@@ -37,18 +37,14 @@ interface StyledCellProps extends BoxProps {
 }
 
 const StyledCell = styled( Box )<StyledCellProps>`
-    border: ${COLORS['grey-1']} solid 2px;
     border-radius: 2px;
     overflow: hidden;
     width: ${props => props.dimension}px;
     height: ${props => props.dimension}px;
     line-height: 1.3em;
-    background: ${props => props.marked? COLORS['blue'] : undefined};
-    color: ${props => props.marked? COLORS['grey-5'] : COLORS[ 'black' ]};
     text-align: center;
     overflow: hidden;
     :hover {
-        background: ${props => props.marked? COLORS['light-blue'] : COLORS['very-light-blue']};
         cursor: pointer;
     }
     > div {
@@ -129,8 +125,10 @@ const BingoBoard: React.FC<Props> = ( props ) => {
                             pad={`${pad}px`}
                             marked={cell?.marked}
                             align="center"
-                            alignContent='center'
                             justify='center'
+                            background={cell?.marked? Colors["tile-4"] : Colors["tile-1"]}
+                            hoverIndicator={cell?.marked? Colors["tile-3"] : Colors["tile-2"]}
+                            border={{ color: Colors["tile-border"], style: "solid", size: "2px" }}
                             onClick={() => toggleCell( rowIndex, cellIndex )}
                             onMouseDown={( event: React.MouseEvent ) => event.preventDefault()}
                             data-for={tooltip? "tooltip" : undefined}

@@ -3,8 +3,10 @@ import styled from "styled-components";
 import BingoBoard, { BingoOption } from "../components/BingoBoard";
 import { Box, Button, CheckBox, Text } from "grommet"
 import { useHistory } from 'react-router-dom';
+import { PageProps } from '../utils/models';
+import { Colors } from '../utils/constants';
 
-interface Props {
+interface Props extends PageProps {
     root: string
     title: string
     seed: string
@@ -45,14 +47,22 @@ const BingoPage: React.FC<Props> = ( props ) => {
                     width="100%"
                     justify="evenly"
                     align="center">
-                    <Button primary style={{ padding: "5px" }}>
+                    <Button
+                        primary
+                        color="button"
+                        onClick={() => props.setDarkMode( !props.darkMode )}
+                        style={{ padding: "8px" }}>
                         Toggle Dark Mode
                     </Button>
                     {anyTooltip && <CheckBox
                         checked={info}
                         onChange={( e ) => setInfo( e.target.checked )}
                         label="Show Detailed Info" />}
-                    <Button primary onClick={resetSeed} style={{ padding: "5px" }}>
+                    <Button
+                        primary
+                        color="button"
+                        onClick={resetSeed}
+                        style={{ padding: "8px" }}>
                         New Card
                     </Button>
                 </StyledRow>

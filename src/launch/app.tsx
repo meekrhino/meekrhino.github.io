@@ -11,22 +11,31 @@ import DWPage from '../pages/DWPage'
  * and Routes to desired views through the URL
  */
 const App = () => {
+    const [ darkMode, setDarkMode ] = React.useState( false )
+
+    console.log( "dark mode is " + darkMode )
+
     /* Return App */
     return (
         <Grommet
-            full
+            full="min"
+            themeMode={darkMode? "dark" : "light"}
             theme={THEME}
             style={{ height: '100%', display: 'flex', justifyContent: "center" }}>
             <HashRouter>
                 <Switch>
                     <Route
                         exact
-                        component={LydiaPage}
+                        render={( props ) => (
+                            <LydiaPage darkMode={darkMode} setDarkMode={setDarkMode}/>
+                        )}
                         path={`${Pages.LYDIA}/seed=:seed`}
                     />
                     <Route
                         exact
-                        component={LydiaPage}
+                        render={( props ) => (
+                            <LydiaPage darkMode setDarkMode={setDarkMode}/>
+                        )}
                         path={`${Pages.LYDIA}`}
                     />
                     <Route
