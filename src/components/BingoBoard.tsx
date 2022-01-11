@@ -107,14 +107,15 @@ const BingoBoard: React.FC<Props> = ( props ) => {
         <Box
             flex
             direction="column"
-            gap="xxsmall"
-            style={{ borderCollapse: "separate", borderSpacing: `${borderSpacing}px` }}>
+            justify="start"
+            gap="xxsmall">
             {board.map( ( row, rowIndex ) =>
                 <Box
                     flex
                     direction="row"
                     gap="xxsmall"
-                    key={`bingo_row_${rowIndex}`}>
+                    key={`bingo_row_${rowIndex}`}
+                    style={{ maxHeight: squareSize }}>
                     {row.map( ( cell, cellIndex ) => {
                         const text = ( props.detailed && cell?.tooltip )? cell.tooltip : cell?.content
                         const tooltip = cell?.tooltip? cell.tooltip: undefined
@@ -125,7 +126,7 @@ const BingoBoard: React.FC<Props> = ( props ) => {
                             pad={`${pad}px`}
                             marked={cell?.marked}
                             align="center"
-                            justify='center'
+                            justify="center"
                             background={cell?.marked? Colors["tile-4"] : Colors["tile-1"]}
                             hoverIndicator={cell?.marked? Colors["tile-3"] : Colors["tile-2"]}
                             border={{ color: Colors["tile-border"], style: "solid", size: "2px" }}
