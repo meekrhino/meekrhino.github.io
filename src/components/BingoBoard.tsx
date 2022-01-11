@@ -75,7 +75,7 @@ const BingoBoard: React.FC<Props> = ( props ) => {
     const borderSpacing = 2;
     const calcSize = () => Math.min(
         window.innerWidth / 5 - ( borderSpacing * 4 ) - 20,
-        110
+        120
     )
 
     const [ size, setSize ] = React.useState( calcSize )
@@ -89,9 +89,6 @@ const BingoBoard: React.FC<Props> = ( props ) => {
 
     const squareSize = size * 0.9
     const pad = ( size - squareSize ) / 2
-
-    console.log( `full size ${document.documentElement.clientWidth}` )
-    console.log( `tile size ${size}` )
 
 
     const toggleCell = ( row: number, col: number ) => {

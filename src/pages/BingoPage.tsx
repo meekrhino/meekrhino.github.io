@@ -1,9 +1,11 @@
 import * as React from 'react'
 import styled from "styled-components";
 import BingoBoard, { BingoOption } from "../components/BingoBoard";
-import { Box, CheckBox, Text } from "grommet"
+import { Box, Button, CheckBox, Text } from "grommet"
+import { useHistory } from 'react-router-dom';
 
 interface Props {
+    root: string
     title: string
     seed: string
     options?: BingoOption[]
@@ -16,12 +18,22 @@ const StyledHeader = styled( Text )`
     text-align: center;
 `
 
+const StyledRow = styled( Box )`
+    display: flex;
+    flex-direction: row;
+`
+
 const StyledLink = styled.a`
     font-size: 16pt;
 `
 
 const BingoPage: React.FC<Props> = ( props ) => {
     const [ info, setInfo ] = React.useState( false )
+    const history = useHistory()
+
+    const resetSeed = ( () => {
+        history.push( props.root )
+    } )
 
     const anyTooltip = !!props.options.find( o => typeof o !== "string" && o.tooltip )
 
@@ -29,10 +41,21 @@ const BingoPage: React.FC<Props> = ( props ) => {
                 <StyledHeader>
                     {props.title}
                 </StyledHeader>
-                {anyTooltip && <CheckBox
-                    checked={info}
-                    onChange={( e ) => setInfo( e.target.checked )}
-                    label="Show Detailed Info" />}
+                <StyledRow
+                    width="100%"
+                    justify="evenly"
+                    align="center">
+                    <Button primary style={{ padding: "5px" }}>
+                        Toggle Dark Mode
+                    </Button>
+                    {anyTooltip && <CheckBox
+                        checked={info}
+                        onChange={( e ) => setInfo( e.target.checked )}
+                        label="Show Detailed Info" />}
+                    <Button primary onClick={resetSeed} style={{ padding: "5px" }}>
+                        New Card
+                    </Button>
+                </StyledRow>
                 <BingoBoard
                     detailed={info}
                     {...props}/>

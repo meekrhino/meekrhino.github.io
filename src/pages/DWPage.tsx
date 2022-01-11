@@ -1,8 +1,10 @@
 import * as React from 'react'
-import BingoBoard from '../components/BingoBoard'
+import { Pages } from '../utils/constants'
+import BingoPage from './BingoPage'
 
 const DWPage: React.FC = () => {
-    return <BingoBoard
+    return <BingoPage
+                root={Pages.DIGIMON}
                 title="digimon world rando bingo"
                 seed="123"/>
 }

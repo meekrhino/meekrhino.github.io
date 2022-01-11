@@ -11,9 +11,10 @@ export const THEME: ThemeType = {
             family: "Arial"
         }
     },
-    table: {
-        body: {
-            border: "1px solid"
+    button: {
+        padding: {
+            horizontal: "5px",
+            vertical: "5px"
         }
     }
 }

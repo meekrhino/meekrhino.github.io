@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { useHistory, useParams } from 'react-router-dom'
-import BingoBoard, { BingoOption } from '../components/BingoBoard'
+import { BingoOption } from '../components/BingoBoard'
 import { Pages } from '../utils/constants'
 import BingoPage from './BingoPage'
 
@@ -19,6 +19,7 @@ const LydiaPage: React.FC = () => {
         }
         const seedVal = parseInt( seed )
         return <BingoPage
+            root={Pages.LYDIA}
             title="lydlbutton stream bingo"
             options={lydiaOptions}
             seed={seed}/>
