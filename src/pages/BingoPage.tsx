@@ -66,12 +66,12 @@ const BingoPage: React.FC<Props> = ( props ) => {
                         New Card
                     </Button>
                 </StyledRow>
-                <BingoBoard
-                    detailed={info}
-                    {...props}/>
                 <StyledLink href="https://docs.google.com/document/d/1Waefod2BSDOGfPOZQGCF1payGVe54fT8zIHIoMsuOog/edit?usp=sharing">
                     Rules and Glossary
                 </StyledLink>
+                <BingoBoard
+                    detailed={info}
+                    {...props}/>
             </Box>
 }
 

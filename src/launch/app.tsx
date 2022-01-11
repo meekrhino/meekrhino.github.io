@@ -16,6 +16,7 @@ const App = () => {
     /* Return App */
     return (
         <Grommet
+            full="min"
             themeMode={darkMode? "dark" : "light"}
             theme={THEME}
             style={{ height: '100%', display: 'flex', justifyContent: "center" }}>
