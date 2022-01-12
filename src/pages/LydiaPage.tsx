@@ -19,7 +19,7 @@ const LydiaPage: Page = ( props ) => {
             {...props}
             root={Pages.LYDIA}
             title="lydlbutton stream bingo"
-            options={lydiaOptionsCoco}
+            options={lydiaOptionsPie}
             seed={seed}/>
     }
     else {
