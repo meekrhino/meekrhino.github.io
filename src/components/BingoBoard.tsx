@@ -136,7 +136,8 @@ const BingoBoard: React.FC<Props> = ( props ) => {
                             data-tip={tooltip}>
                             <Textfit
                                 mode="multi"
-                                max={25}>
+                                max={25}
+                                style={{ maxHeight: squareSize}}>
                                 {text}
                             </Textfit>
                         </StyledCell>
