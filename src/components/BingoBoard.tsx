@@ -151,14 +151,19 @@ const BingoBoard: React.FC<Props> = ( props ) => {
 const newBoard = ( options: BingoOption[], seed: string ): Board => {
     const rand = newRand( seed )
 
-    if( options.length < 24 ) {
-        console.error( "Provided less than 25 options.  Using random values" )
-        options = options.concat( Array.from( Array( 24 - options.length ).keys() ).map( i => ""+i ) )
-    }
+    const newOptions = ((): BingoOption[] => {
+        if( options.length < 24 ) {
+            console.error( "Provided less than 25 options.  Using random values" )
+            return newOptions.concat( Array.from( Array( 24 - newOptions.length ).keys() ).map( i => ""+i ) )
+        }
+        return options.slice()
+    })().sort( () => 0.5 - rand() ).slice( 0, 24 )
 
-    options = options.sort( () => 0.5 - rand() ).slice( 0, 24 )
-    options.splice( 12, 0, "Free Space" )
-    const squares: BingoSquare[] = options.map( ( s ) => {
+    newOptions.splice( 12, 0, "Free Space" )
+
+    console.log( newOptions )
+
+    const squares: BingoSquare[] = newOptions.map( ( s ) => {
 
         if( typeof s === "string" ) {
             return { marked: false, content: s }
