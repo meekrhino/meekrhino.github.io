@@ -1,7 +1,7 @@
 import { Box, BoxProps } from 'grommet'
 import * as React from 'react'
 import styled from 'styled-components'
-import { Colors, COLORS } from '../utils/constants'
+import { Colors } from '../utils/constants'
 import { Textfit } from 'react-textfit';
 import ReactTooltip from 'react-tooltip';
 import { newRand } from '../utils/rng';
@@ -153,15 +153,13 @@ const newBoard = ( options: BingoOption[], seed: string ): Board => {
 
     const newOptions = ((): BingoOption[] => {
         if( options.length < 24 ) {
-            console.error( "Provided less than 25 options.  Using random values" )
+            console.error( "Provided less than 24 options.  Using random values" )
             return newOptions.concat( Array.from( Array( 24 - newOptions.length ).keys() ).map( i => ""+i ) )
         }
         return options.slice()
     })().sort( () => 0.5 - rand() ).slice( 0, 24 )
 
     newOptions.splice( 12, 0, "Free Space" )
-
-    console.log( newOptions )
 
     const squares: BingoSquare[] = newOptions.map( ( s ) => {
 
