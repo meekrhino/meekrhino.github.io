@@ -106,17 +106,14 @@ const BingoBoard: React.FC<Props> = ( props ) => {
 
     const hasTooltip = board.find( ( row => !!row.find( c => !!c.tooltip ) ) )
 
-    return <>
-        {hasTooltip &&
-            <ReactTooltip
-                id="tooltip"
-                effect="solid"
-                delayShow={500}/>}
+    return (
         <Box
-            flex
-            direction="column"
             justify="start"
             gap="xxsmall">
+            {hasTooltip && <ReactTooltip
+                                id="tooltip"
+                                effect="solid"
+                                delayShow={500}/>}
             {board.map( ( row, rowIndex ) =>
                 <Box
                     flex
@@ -153,7 +150,7 @@ const BingoBoard: React.FC<Props> = ( props ) => {
                 </Box>
             )}
         </Box>
-    </>
+    )
 }
 
 const newBoard = ( options: BingoOption[], seed: string ): Board => {

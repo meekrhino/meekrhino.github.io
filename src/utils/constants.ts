@@ -47,6 +47,7 @@ export const Colors: { [colors: string]: ColorType } = {
     "tile-2":       { dark: "#1FAFF0",  light: "#1FAFF0" },
     "tile-3":       { dark: "#125AC9",  light: "#125AC9" },
     "tile-4":       { dark: "#0B419E",  light: "#0B419E" },
+    "brand":        { dark: "#0E5A8A",  light: "#48AFF0" }
 }
 
 export enum Pages {

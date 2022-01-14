@@ -1,33 +1,89 @@
 import * as React from 'react'
 import styled from "styled-components";
 import BingoBoard, { BingoOption } from "../components/BingoBoard";
-import { Box, Button, CheckBox, Text } from "grommet"
+import { Box, BoxExtendedProps, Button, CheckBox, Text } from "grommet"
 import { useHistory } from 'react-router-dom';
 import { PageProps } from '../utils/models';
+import { BrowserView, isMobile, MobileView } from 'react-device-detect';
 
-export interface BingoPageProps extends PageProps {
+/**
+ * Assorted components
+ */
+const Row: React.FC<BoxExtendedProps> = ( props ) => {
+    return  <Box
+                flex
+                direction="row"
+                gap="medium"
+                width="100%"
+                justify="center"
+                align="center">
+                {props.children}
+            </Box>
+}
+
+const StyledLink = styled.a`
+    font-size: 16pt;
+`
+
+/**
+ * Mobile Header
+ */
+const StyledHeader = styled( Box )`
+    font-size: 24pt;
+    font-weight: 800;
+`
+
+const Header: React.FC<BoxExtendedProps> = ( props ) => {
+    return  <StyledHeader
+                flex={false}
+                tag="header"
+                background="brand"
+                pad="small"
+                align="center"
+                {...props}>
+                {props.children}
+            </StyledHeader>
+}
+
+/**
+ * Mobile Footer
+ */
+const MobileFooter: React.FC<BoxExtendedProps> = ( props ) => {
+
+    return  <Box
+                flex
+                gap="none"
+                direction="row"
+                height={{ min: "80px" }}
+                width="100%"
+                style={{ position: "absolute", bottom: "0px" }}
+                {...props}/>
+}
+
+/**
+ * Mobile Footer Button
+ */
+const MobileFooterButton: React.FC<BoxExtendedProps> = ( props ) => {
+    return  <Box
+                width="50%"
+                align="center"
+                justify="center"
+                {...props}/>
+}
+
+/**
+ * Page props
+ */
+ export interface BingoPageProps extends PageProps {
     root: string
     title: string
     seed: string
     options?: BingoOption[]
 }
 
-const StyledHeader = styled( Text )`
-    font-size: 24pt;
-    font-weight: 800;
-    margin: 20px;
-    text-align: center;
-`
-
-const StyledRow = styled( Box )`
-    display: flex;
-    flex-direction: row;
-`
-
-const StyledLink = styled.a`
-    font-size: 16pt;
-`
-
+/**
+ * Page renderer
+ */
 const BingoPage: React.FC<BingoPageProps> = ( props ) => {
     const [ info, setInfo ] = React.useState( false )
     const history = useHistory()
@@ -37,15 +93,45 @@ const BingoPage: React.FC<BingoPageProps> = ( props ) => {
     } )
 
     const anyTooltip = !!props.options?.find( o => typeof o !== "string" && o.tooltip )
+    return  <Box>
+        <BrowserView>
+            {renderDesktopVersion(
+                props,
+                anyTooltip,
+                info,
+                setInfo,
+                resetSeed
+            )}
+        </BrowserView>
+        <MobileView>
+            {renderMobileVersion(
+                props,
+                anyTooltip,
+                info,
+                setInfo,
+                resetSeed
+            )}
+        </MobileView>
+    </Box>
+}
 
-    return  <Box align='center' direction="column" gap="15px">
-                <StyledHeader>
-                    {props.title}
-                </StyledHeader>
-                <StyledRow
-                    width="100%"
-                    justify="evenly"
-                    align="center">
+/**
+ * Render the desktop version of the page
+ */
+const renderDesktopVersion = (
+    props: BingoPageProps,
+    anyTooltip: boolean,
+    info: boolean,
+    setInfo: ( info: boolean ) => void,
+    resetSeed: () => void
+) => {
+    return  (
+        <Box fill gap="small" height={{ min: "100vh" }}>
+            <Header>
+                {props.title}
+            </Header>
+            <Box flex={{ grow: 0 }} align="center" gap="medium" overflow="auto">
+                <Row>
                     <Button
                         primary
                         color="button"
@@ -64,14 +150,64 @@ const BingoPage: React.FC<BingoPageProps> = ( props ) => {
                         style={{ padding: "8px" }}>
                         New Card
                     </Button>
-                </StyledRow>
+                </Row>
                 <StyledLink href="https://docs.google.com/document/d/1Waefod2BSDOGfPOZQGCF1payGVe54fT8zIHIoMsuOog/edit?usp=sharing">
                     Rules and Glossary
                 </StyledLink>
-                <BingoBoard
-                    detailed={info}
-                    {...props}/>
+                {renderBoard( props, info )}
             </Box>
+        </Box>
+    )
+}
+
+/**
+ * Render the mobile version of the page
+ */
+const renderMobileVersion = (
+    props: BingoPageProps,
+    anyTooltip: boolean,
+    info: boolean,
+    setInfo: ( info: boolean ) => void,
+    resetSeed: () => void
+) => {
+    return  (
+        <Box fill gap="small">
+            <Header>
+                {props.title}
+            </Header>
+            <Box flex align='center' gap="medium" overflow="auto">
+                {renderBoard( props, info )}
+                {anyTooltip && <CheckBox
+                    checked={info}
+                    onChange={( e ) => setInfo( e.target.checked )}
+                    label="Show Detailed Info" />}
+                <StyledLink href="https://docs.google.com/document/d/1Waefod2BSDOGfPOZQGCF1payGVe54fT8zIHIoMsuOog/edit?usp=sharing">
+                    Rules and Glossary
+                </StyledLink>
+            </Box>
+            <MobileFooter>
+                <MobileFooterButton
+                    background="button"
+                    onClick={() => props.setDarkMode( !props.darkMode )}>
+                    Toggle Dark Mode
+                </MobileFooterButton>
+                <MobileFooterButton
+                    background="brand"
+                    onClick={resetSeed}>
+                    New Card
+                </MobileFooterButton>
+            </MobileFooter>
+        </Box>
+    )
+}
+
+/**
+ * Render the bingo board
+ */
+const renderBoard = ( props: BingoPageProps, detailed: boolean ) => {
+    return  <BingoBoard
+                detailed={detailed}
+                {...props}/>
 }
 
 export default BingoPage

@@ -28,8 +28,7 @@ const App = () => {
         <Grommet
             full="min"
             themeMode={darkMode? "dark" : "light"}
-            theme={THEME}
-            style={{ height: '100%', display: 'flex', justifyContent: "center" }}>
+            theme={THEME}>
             <BrowserRouter>
                 <FirebaseContext.Provider value={firebaseInstance}>
                     <FirebaseInitializer>
