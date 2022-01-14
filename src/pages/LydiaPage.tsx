@@ -3,6 +3,7 @@ import { useHistory, useParams } from 'react-router-dom'
 import { BingoOption } from '../components/BingoBoard'
 import { Pages } from '../utils/constants'
 import { Page } from '../utils/models'
+import { xmur3 } from '../utils/rng'
 import BingoPage from './BingoPage'
 
 interface LydiaPageParams {
@@ -23,8 +24,8 @@ const LydiaPage: Page = ( props ) => {
             seed={seed}/>
     }
     else {
-        const newSeed = Math.floor( Math.random() * 1000 * 1000)
-        history.push( `${Pages.LYDIA}/seed=${newSeed}` )
+        const newSeed = xmur3( ""+Math.random() )()
+        history.push( `${Pages.LYDIA}&seed=${newSeed}` )
         return null
     }
 

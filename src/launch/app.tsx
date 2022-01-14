@@ -40,7 +40,7 @@ const App = () => {
                                 render={( props ) => (
                                     <LydiaPage darkMode={darkMode} setDarkMode={setDarkMode}/>
                                 )}
-                                path={`${Pages.LYDIA}/seed=:seed`}
+                                path={`${Pages.LYDIA}&seed=:seed`}
                             />
                             <Route
                                 exact

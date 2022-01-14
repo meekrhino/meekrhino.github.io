@@ -6,7 +6,7 @@ export const newRand = ( seed: string ) => {
     return rand2
 }
 
-const xmur3 = ( str: string ) => {
+export const xmur3 = ( str: string ) => {
     for(var i = 0, h = 1779033703 ^ str.length; i < str.length; i++) {
         h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
         h = h << 13 | h >>> 19;
@@ -30,14 +30,5 @@ const sfc32 = ( a: number, b: number, c: number, d: number ) => {
       t = t + d | 0;
       c = c + t | 0;
       return (t >>> 0) / 4294967296;
-    }
-}
-
-const mulberry32 = ( a: number ) => {
-    return function() {
-      var t = a += 0x6D2B79F5;
-      t = Math.imul(t ^ t >>> 15, t | 1);
-      t ^= t + Math.imul(t ^ t >>> 7, t | 61);
-      return ((t ^ t >>> 14) >>> 0) / 4294967296;
     }
 }
