@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { HashRouter, Route, Switch } from 'react-router-dom'
+import { BrowserRouter, Route, Switch } from 'react-router-dom'
 import { Grommet } from 'grommet'
 import { Pages } from '../utils/constants'
 import { THEME } from '../utils/theme'
@@ -31,7 +31,7 @@ const App = () => {
             themeMode={darkMode? "dark" : "light"}
             theme={THEME}
             style={{ height: '100%', display: 'flex', justifyContent: "center" }}>
-            <HashRouter>
+            <BrowserRouter>
                 <FirebaseContext.Provider value={firebaseInstance}>
                     <FirebaseInitializer>
                         <Switch>
@@ -58,7 +58,7 @@ const App = () => {
                         </Switch>
                     </FirebaseInitializer>
                 </FirebaseContext.Provider>
-            </HashRouter>
+            </BrowserRouter>
         </Grommet>
     )
 }

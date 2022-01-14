@@ -51,7 +51,7 @@ export const Colors: { [colors: string]: ColorType } = {
 
 export enum Pages {
     LANDING = "/",
-    LYDIA = "/lydlbutton-bingo",
-    DIGIMON = "/dw-rando-bingo",
+    LYDIA = "/lydlbutton",
+    DIGIMON = "/dw-rando",
     ERROR = "*"
 }
