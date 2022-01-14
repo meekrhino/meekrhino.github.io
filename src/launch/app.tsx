@@ -4,9 +4,9 @@ import { Grommet } from 'grommet'
 import { Pages } from '../utils/constants'
 import { THEME } from '../utils/theme'
 import LydiaPage from '../pages/LydiaPage'
-import DWPage from '../pages/DWPage'
 import Firebase from '../utils/firebase-utils'
 import FirebaseInitializer from "../utils/firebase-initializer"
+import Page from '../pages/Page'
 
 /* User Context */
 const firebaseInstance = new Firebase()
@@ -38,21 +38,16 @@ const App = () => {
                             <Route
                                 exact
                                 render={( props ) => (
-                                    <LydiaPage darkMode={darkMode} setDarkMode={setDarkMode}/>
+                                    <Page darkMode={darkMode} setDarkMode={setDarkMode}/>
                                 )}
-                                path={`${Pages.LYDIA}&seed=:seed`}
+                                path={`/:page&seed=:seed`}
                             />
                             <Route
                                 exact
                                 render={( props ) => (
-                                    <LydiaPage darkMode setDarkMode={setDarkMode}/>
+                                    <Page darkMode setDarkMode={setDarkMode}/>
                                 )}
-                                path={`${Pages.LYDIA}`}
-                            />
-                            <Route
-                                exact
-                                component={DWPage}
-                                path={`${Pages.DIGIMON}`}
+                                path={`/:page`}
                             />
                             <Route path={Pages.ERROR} component={null} />
                         </Switch>

@@ -5,4 +5,4 @@ export interface PageProps {
     setDarkMode: ( active: boolean ) => void
 }
 
-export interface Page extends React.FC<PageProps> {}
+export interface PageComponent extends React.FC<PageProps> {}

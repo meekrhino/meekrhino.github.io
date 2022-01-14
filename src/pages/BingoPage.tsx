@@ -6,7 +6,7 @@ import { useHistory } from 'react-router-dom';
 import { PageProps } from '../utils/models';
 import { Colors } from '../utils/constants';
 
-interface Props extends PageProps {
+export interface BingoPageProps extends PageProps {
     root: string
     title: string
     seed: string
@@ -29,7 +29,7 @@ const StyledLink = styled.a`
     font-size: 16pt;
 `
 
-const BingoPage: React.FC<Props> = ( props ) => {
+const BingoPage: React.FC<BingoPageProps> = ( props ) => {
     const [ info, setInfo ] = React.useState( false )
     const history = useHistory()
 
@@ -37,7 +37,7 @@ const BingoPage: React.FC<Props> = ( props ) => {
         history.push( props.root )
     } )
 
-    const anyTooltip = !!props.options.find( o => typeof o !== "string" && o.tooltip )
+    const anyTooltip = !!props.options?.find( o => typeof o !== "string" && o.tooltip )
 
     return  <Box align='center' direction="column" gap="15px">
                 <StyledHeader>

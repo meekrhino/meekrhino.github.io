@@ -2,35 +2,48 @@ import * as React from 'react'
 import { useHistory, useParams } from 'react-router-dom'
 import { BingoOption } from '../components/BingoBoard'
 import { Pages } from '../utils/constants'
-import { Page } from '../utils/models'
+import { PageComponent } from '../utils/models'
 import { xmur3 } from '../utils/rng'
-import BingoPage from './BingoPage'
+import BingoPage, { BingoPageProps } from './BingoPage'
 
-interface LydiaPageParams {
+interface PageParams {
+    page: string
     seed: string
 }
 
-const LydiaPage: Page = ( props ) => {
-    const { seed } = useParams<LydiaPageParams>()
+const Page: PageComponent = ( props ) => {
+    const { page, seed } = useParams<PageParams>()
 
     const history = useHistory()
 
     if( seed ) {
-        return <BingoPage
-            {...props}
-            root={Pages.LYDIA}
-            title="lydlbutton stream bingo"
-            options={lydiaOptionsPie}
-            seed={seed}/>
+        switch( page ) {
+            case Pages.LYDIA:
+                return <BingoPage
+                    {...props}
+                    root={page}
+                    title="lydlbutton stream bingo"
+                    options={lydiaOptionsPie}
+                    seed={seed}/>
+
+            case Pages.DIGIMON:
+                return <BingoPage
+                    {...props}
+                    root={page}
+                    title="digimon world rando bingo"
+                    seed={seed}/>
+
+            default:
+                return null
+        }
     }
     else {
         const newSeed = xmur3( ""+Math.random() )()
-        history.push( `${Pages.LYDIA}&seed=${newSeed}` )
+        history.push( `${page}&seed=${newSeed}` )
         return null
     }
 
 }
-
 const lydiaOptionsPie: BingoOption[] = [
     { text: `"Barkin in bed"`, tooltip: `someone mentions Pie's bedtime preferences` },
     { text: `“Finished” hehe`, tooltip: `Someone laughs at getting "finished"` },
@@ -117,4 +130,4 @@ const lydiaOptionsCoco: BingoOption[] = [
     { text: `Charge Rifle`, tooltip: `Coco gets a charge rifle` }
 ]
 
-export default LydiaPage
+export default Page

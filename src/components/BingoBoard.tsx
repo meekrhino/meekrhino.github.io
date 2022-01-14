@@ -154,7 +154,7 @@ const newBoard = ( options: BingoOption[], seed: string ): Board => {
     const newOptions = ((): BingoOption[] => {
         if( options.length < 24 ) {
             console.error( "Provided less than 24 options.  Using random values" )
-            return newOptions.concat( Array.from( Array( 24 - newOptions.length ).keys() ).map( i => ""+i ) )
+            return options.concat( Array.from( Array( 24 - options.length ).keys() ).map( i => ""+i ) )
         }
         return options.slice()
     })().sort( () => 0.5 - rand() ).slice( 0, 24 )
