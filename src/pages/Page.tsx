@@ -1,8 +1,9 @@
 import * as React from 'react'
 import { useHistory, useParams } from 'react-router-dom'
 import { BingoOption } from '../components/BingoBoard'
+import { FirebaseContext } from '../launch/app'
 import { Pages } from '../utils/constants'
-import { PageProps } from '../utils/models'
+import { PageData, PageProps } from '../utils/models'
 import { xmur3 } from '../utils/rng'
 import BingoPage from './BingoPage'
 
@@ -13,8 +14,11 @@ interface PageParams {
 
 const Page: React.FC<PageProps> = ( props ) => {
     const { page, seed } = useParams<PageParams>()
-
+    const firebase = React.useContext( FirebaseContext )
     const history = useHistory()
+    const [ pageData, setPageData ] = React.useState( null as PageData )
+
+    firebase.getPageData( "lydlbutton" ).then( d => setPageData( d ) )
 
     if( seed ) {
         switch( page ) {
@@ -34,12 +38,17 @@ const Page: React.FC<PageProps> = ( props ) => {
                     seed={seed}/>
 
             default:
-                return null
+                return pageData && <BingoPage
+                    {...props}
+                    root={pageData.root}
+                    title={pageData.modes.get( pageData.defaultMode ).title}
+                    options={Array.from( pageData.options.values() )}
+                    seed={seed}/>
         }
     }
     else {
         const newSeed = xmur3( ""+Math.random() )()
-        history.push( `${page}&seed=${newSeed}` )
+        history.replace( `${page}&seed=${newSeed}` )
         return null
     }
 

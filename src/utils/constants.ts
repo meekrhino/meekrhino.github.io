@@ -55,3 +55,21 @@ export enum Pages {
     DIGIMON = "dw-rando",
     ERROR = "*"
 }
+
+export enum Tier {
+    FREE = "free",
+    BASIC = "basic",
+    PREMIUM = "premium"
+}
+
+export enum Feature {
+    EDIT_ROOT,
+    TOOLTIPS,
+    UNLIMITED_MODES,
+    UNLIMITED_OPTIONS,
+    UNLIMITED_OPTION_GROUPS,
+    USE_DATA_TRACKING,
+    MUTUALLY_EXCLUSIVE_OPTIONS,
+    WEIGHTED_OPTIONS,
+    GROUP_PER_COLUMN
+}

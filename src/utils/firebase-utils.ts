@@ -2,7 +2,8 @@ import * as FireBase from "firebase/app"
 import 'firebase/auth'
 import { createUserWithEmailAndPassword, getAuth, reauthenticateWithCredential, reauthenticateWithPopup, sendPasswordResetEmail, signInWithEmailAndPassword, updateEmail, updatePassword } from "firebase/auth"
 import 'firebase/firestore'
-import { Firestore, getFirestore, collection, getDoc, getDocs, DocumentReference, DocumentSnapshot, terminate } from "firebase/firestore"
+import { Firestore, getFirestore, collection, getDoc, getDocs, DocumentReference, DocumentSnapshot, terminate, doc, FirestoreDataConverter } from "firebase/firestore"
+import { ModeData, OptionGroupData, PageData, OptionData } from "./models"
 
 /**
  * These values are stored in var.env
@@ -96,6 +97,120 @@ class Firebase {
     /* Updates a user's email */
     updateEmail = ( email: string ) => {
         updateEmail( getAuth( this._app ).currentUser, email )
+    }
+
+    getPageData = async ( user: string ) => {
+        const docRef = doc( this._db, "pages", user ).withConverter( this.pageConverter )
+        const docSnap = await getDoc( docRef )
+
+        if( docSnap.exists ) {
+            const page = docSnap.data()
+            page.modes = await this.getModeData( user )
+            page.optionGroups = await this.getOptionGroupData( user )
+            page.options = await this.getOptionData( user )
+
+            return page
+        }
+        else {
+            console.log( "Attempted to retrieve non-existant page " + user )
+
+            return null
+        }
+    }
+
+    getModeData = async ( user: string ) => {
+        const modesQuery = collection( this._db, "pages", user, "modes" ).withConverter( this.modeConverter )
+        const modesQuerySnapshot = await getDocs( modesQuery )
+
+        const modes: Map<string, ModeData> = new Map()
+        modesQuerySnapshot.forEach( ( doc ) => {
+            modes.set( doc.id, doc.data() )
+        } )
+
+        return modes
+    }
+
+    getOptionGroupData = async ( user: string ) => {
+        const optionGroupsQuery = collection( this._db, "pages", user, "optionGroups" ).withConverter( this.optionGroupConverter )
+        const optionGroupsQuerySnapshot = await getDocs( optionGroupsQuery )
+
+        const optionGroups: Map<string, OptionGroupData> = new Map()
+        optionGroupsQuerySnapshot.forEach( ( doc ) => {
+            optionGroups.set( doc.id, doc.data() )
+        } )
+
+        return optionGroups
+    }
+
+    getOptionData = async ( user: string ) => {
+        const optionsQuery = collection( this._db, "pages", user, "options" ).withConverter( this.optionConverter )
+        const optionsQuerySnapshot = await getDocs( optionsQuery )
+
+        const options: Map<string, OptionData> = new Map()
+        optionsQuerySnapshot.forEach( ( doc ) => {
+            options.set( doc.id, doc.data() )
+        } )
+
+        return options
+    }
+
+    /* Converters */
+    pageConverter: FirestoreDataConverter<PageData> = {
+        toFirestore: ( page: PageData ) => {
+            return {
+                root: page.root,
+                tier: page.tier,
+                defaultMode: page.defaultMode,
+                externalLink: page.externalLink,
+                externalLinkText: page.externalLinkText
+            }
+        },
+        fromFirestore: ( snapshot, options ) => {
+            const data = snapshot.data( options );
+            return { ...data } as PageData
+        }
+    }
+
+    modeConverter: FirestoreDataConverter<ModeData> = {
+        toFirestore: ( mode: ModeData ) => {
+            return {
+                displayName: mode.displayName,
+                useFreeSpace: mode.useFreeSpace,
+                groupPerColumn: mode.groupPerColumn,
+                optionGroups: mode.optionGroups
+            }
+        },
+        fromFirestore: ( snapshot, options ) => {
+            const data = snapshot.data( options );
+            return { ...data, id: snapshot.id } as ModeData
+        }
+    }
+
+    optionGroupConverter: FirestoreDataConverter<OptionGroupData> = {
+        toFirestore: ( og: OptionGroupData ) => {
+            return {
+                displayName: og.displayName,
+                options: og.options
+            }
+        },
+        fromFirestore: ( snapshot, options ) => {
+            const data = snapshot.data( options );
+            return { ...data, id: snapshot.id } as OptionGroupData
+        }
+    }
+
+    optionConverter: FirestoreDataConverter<OptionData> = {
+        toFirestore: ( o: OptionData ) => {
+            return {
+                text: o.text,
+                tooltip: o.tooltip,
+                disabled: o.disabled
+            }
+        },
+        fromFirestore: ( snapshot, options ) => {
+            const data = snapshot.data( options );
+            return { ...data, id: snapshot.id } as OptionData
+        }
     }
 }
 
