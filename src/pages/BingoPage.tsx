@@ -4,7 +4,6 @@ import BingoBoard, { BingoOption } from "../components/BingoBoard";
 import { Box, Button, CheckBox, Text } from "grommet"
 import { useHistory } from 'react-router-dom';
 import { PageProps } from '../utils/models';
-import { Colors } from '../utils/constants';
 
 export interface BingoPageProps extends PageProps {
     root: string

@@ -3,7 +3,6 @@ import { BrowserRouter, Route, Switch } from 'react-router-dom'
 import { Grommet } from 'grommet'
 import { Pages } from '../utils/constants'
 import { THEME } from '../utils/theme'
-import LydiaPage from '../pages/LydiaPage'
 import Firebase from '../utils/firebase-utils'
 import FirebaseInitializer from "../utils/firebase-initializer"
 import Page from '../pages/Page'

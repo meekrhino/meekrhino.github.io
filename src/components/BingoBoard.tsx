@@ -2,9 +2,10 @@ import { Box, BoxProps } from 'grommet'
 import * as React from 'react'
 import styled from 'styled-components'
 import { Colors } from '../utils/constants'
-import { Textfit } from 'react-textfit';
-import ReactTooltip from 'react-tooltip';
-import { newRand } from '../utils/rng';
+import { Textfit } from 'react-textfit'
+import ReactTooltip from 'react-tooltip'
+import { newRand } from '../utils/rng'
+import { isMobile } from 'react-device-detect'
 
 interface Props {
     title: string
@@ -69,18 +70,25 @@ const BingoBoard: React.FC<Props> = ( props ) => {
     const [ board, setBoard ] = React.useState( newBoard( props.options || [], props.seed ) )
 
     const borderSpacing = 2;
-    const calcSize = () => Math.min(
-        window.innerWidth / 5 - ( borderSpacing * 4 ) - 20,
-        120
-    )
+    const calcSize = () => {
+        if( isMobile ) {
+            return 100
+        }
+        return Math.min(
+            window.innerWidth / 5 - ( borderSpacing * 4 ) - 20,
+            120
+        )
+    }
 
-    const [ size, setSize ] = React.useState( calcSize )
+    const [ size, setSize ] = React.useState( calcSize() )
 
     React.useEffect( () => {
-        const handleResize = () => {
-            setSize( calcSize() )
+        if( !isMobile ) {
+            const handleResize = () => {
+                setSize( calcSize() )
+            }
+            window.addEventListener( 'resize', handleResize )
         }
-        window.addEventListener( 'resize', handleResize )
     } )
 
     const squareSize = size * 0.9

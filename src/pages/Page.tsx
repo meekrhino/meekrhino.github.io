@@ -2,16 +2,16 @@ import * as React from 'react'
 import { useHistory, useParams } from 'react-router-dom'
 import { BingoOption } from '../components/BingoBoard'
 import { Pages } from '../utils/constants'
-import { PageComponent } from '../utils/models'
+import { PageProps } from '../utils/models'
 import { xmur3 } from '../utils/rng'
-import BingoPage, { BingoPageProps } from './BingoPage'
+import BingoPage from './BingoPage'
 
 interface PageParams {
     page: string
     seed: string
 }
 
-const Page: PageComponent = ( props ) => {
+const Page: React.FC<PageProps> = ( props ) => {
     const { page, seed } = useParams<PageParams>()
 
     const history = useHistory()
