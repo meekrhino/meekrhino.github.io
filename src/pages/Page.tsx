@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { isMobile } from 'react-device-detect'
 import { useHistory, useParams } from 'react-router-dom'
 import { BingoOption } from '../components/BingoBoard'
 import { FirebaseContext } from '../launch/app'
@@ -6,10 +7,11 @@ import { Pages } from '../utils/constants'
 import { PageData, PageProps } from '../utils/models'
 import { xmur3 } from '../utils/rng'
 import BingoPage from './BingoPage'
+import ManagePage from './ManagePage'
 
 interface PageParams {
     page: string
-    seed: string
+    seed?: string
 }
 
 const Page: React.FC<PageProps> = ( props ) => {
@@ -18,7 +20,23 @@ const Page: React.FC<PageProps> = ( props ) => {
     const history = useHistory()
     const [ pageData, setPageData ] = React.useState( null as PageData )
 
-    firebase.getPageData( "lydlbutton" ).then( d => setPageData( d ) )
+    React.useEffect(() => {
+        firebase.getPageData( "lydlbutton" ).then( d => setPageData( d ) )
+    }, [] )
+
+    if( props.manage && pageData ) {
+        if( isMobile ) {
+            return null
+        }
+        return <ManagePage
+                    data={pageData}
+                    darkMode={props.darkMode}
+                    setDarkMode={props.setDarkMode} />
+    }
+
+    if( props.manage ) {
+        return null
+    }
 
     if( seed ) {
         switch( page ) {

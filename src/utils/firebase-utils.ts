@@ -1,8 +1,27 @@
 import * as FireBase from "firebase/app"
 import 'firebase/auth'
-import { createUserWithEmailAndPassword, getAuth, reauthenticateWithCredential, reauthenticateWithPopup, sendPasswordResetEmail, signInWithEmailAndPassword, updateEmail, updatePassword } from "firebase/auth"
+import {
+    createUserWithEmailAndPassword,
+    getAuth,
+    sendPasswordResetEmail,
+    signInWithEmailAndPassword,
+    updateEmail,
+    updatePassword
+} from "firebase/auth"
 import 'firebase/firestore'
-import { Firestore, getFirestore, collection, getDoc, getDocs, DocumentReference, DocumentSnapshot, terminate, doc, FirestoreDataConverter } from "firebase/firestore"
+import {
+    Firestore,
+    getFirestore,
+    collection,
+    getDoc,
+    getDocs,
+    setDoc,
+    DocumentSnapshot,
+    terminate,
+    doc,
+    FirestoreDataConverter,
+    deleteDoc
+} from "firebase/firestore"
 import { ModeData, OptionGroupData, PageData, OptionData } from "./models"
 
 /**
@@ -99,6 +118,9 @@ class Firebase {
         updateEmail( getAuth( this._app ).currentUser, email )
     }
 
+    /**
+     * Retrieve all data for the specified user's page
+     */
     getPageData = async ( user: string ) => {
         const docRef = doc( this._db, "pages", user ).withConverter( this.pageConverter )
         const docSnap = await getDoc( docRef )
@@ -118,7 +140,63 @@ class Firebase {
         }
     }
 
-    getModeData = async ( user: string ) => {
+    /**
+     * Write all page data, including modes/options/optiongroups,
+     * to the firestore database
+     */
+    writePageData = async ( user: string, data: PageData ) => {
+        // Write page
+        const pageRef = doc( this._db, "pages", user )
+
+        await setDoc( pageRef, data )
+
+        // Write modes
+        const modePromises: Promise<void>[] = []
+        data.modes.forEach( ( m ) => {
+            const modeRef = doc( this._db, "pages", user, "modes", m.id )
+
+            if( m.deleted ) {
+                modePromises.push( deleteDoc( modeRef ) )
+            }
+            else {
+                modePromises.push( setDoc( modeRef, m ) )
+            }
+        } )
+        await Promise.all( modePromises )
+
+        // Write option groups
+        const ogPromises: Promise<void>[] = []
+        data.optionGroups.forEach( ( og ) => {
+            const ogRef = doc( this._db, "pages", user, "optionGroups", og.id )
+
+            if( og.deleted ) {
+                ogPromises.push( deleteDoc( ogRef ) )
+            }
+            else {
+                ogPromises.push( setDoc( ogRef, og ) )
+            }
+        } )
+        await Promise.all( ogPromises )
+
+        // Write options
+        const oPromises: Promise<void>[] = []
+        data.options.forEach( ( o ) => {
+            const oRef = doc( this._db, "pages", user, "options", o.id )
+
+            if( o.deleted ) {
+                oPromises.push( deleteDoc( oRef ) )
+            }
+            else {
+                oPromises.push( setDoc( oRef, o ) )
+            }
+        } )
+        await Promise.all( oPromises )
+    }
+
+    /**
+     * Private helper functions
+     */
+    private getModeData = async ( user: string ) => {
         const modesQuery = collection( this._db, "pages", user, "modes" ).withConverter( this.modeConverter )
         const modesQuerySnapshot = await getDocs( modesQuery )
 
@@ -130,7 +208,7 @@ class Firebase {
         return modes
     }
 
-    getOptionGroupData = async ( user: string ) => {
+    private getOptionGroupData = async ( user: string ) => {
         const optionGroupsQuery = collection( this._db, "pages", user, "optionGroups" ).withConverter( this.optionGroupConverter )
         const optionGroupsQuerySnapshot = await getDocs( optionGroupsQuery )
 
@@ -142,7 +220,7 @@ class Firebase {
         return optionGroups
     }
 
-    getOptionData = async ( user: string ) => {
+    private getOptionData = async ( user: string ) => {
         const optionsQuery = collection( this._db, "pages", user, "options" ).withConverter( this.optionConverter )
         const optionsQuerySnapshot = await getDocs( optionsQuery )
 
@@ -154,8 +232,10 @@ class Firebase {
         return options
     }
 
-    /* Converters */
-    pageConverter: FirestoreDataConverter<PageData> = {
+    /**
+     * Converters
+     */
+    private pageConverter: FirestoreDataConverter<PageData> = {
         toFirestore: ( page: PageData ) => {
             return {
                 root: page.root,
@@ -171,12 +251,13 @@ class Firebase {
         }
     }
 
-    modeConverter: FirestoreDataConverter<ModeData> = {
+    private modeConverter: FirestoreDataConverter<ModeData> = {
         toFirestore: ( mode: ModeData ) => {
             return {
                 displayName: mode.displayName,
                 useFreeSpace: mode.useFreeSpace,
                 groupPerColumn: mode.groupPerColumn,
+                disabled: mode.disabled,
                 optionGroups: mode.optionGroups
             }
         },
@@ -186,7 +267,7 @@ class Firebase {
         }
     }
 
-    optionGroupConverter: FirestoreDataConverter<OptionGroupData> = {
+    private optionGroupConverter: FirestoreDataConverter<OptionGroupData> = {
         toFirestore: ( og: OptionGroupData ) => {
             return {
                 displayName: og.displayName,
@@ -199,7 +280,7 @@ class Firebase {
         }
     }
 
-    optionConverter: FirestoreDataConverter<OptionData> = {
+    private optionConverter: FirestoreDataConverter<OptionData> = {
         toFirestore: ( o: OptionData ) => {
             return {
                 text: o.text,
@@ -213,5 +294,17 @@ class Firebase {
         }
     }
 }
+
+export const uid = () =>{
+    // Alphanumeric characters
+    const chars =
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let autoId = '';
+    for (let i = 0; i < 20; i++) {
+      autoId += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+
+    return autoId;
+  }
 
 export default Firebase

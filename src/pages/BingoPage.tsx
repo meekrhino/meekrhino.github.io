@@ -5,6 +5,7 @@ import { Box, BoxExtendedProps, Button, CheckBox, Text } from "grommet"
 import { useHistory } from 'react-router-dom';
 import { PageProps } from '../utils/models';
 import { BrowserView, isMobile, MobileView } from 'react-device-detect';
+import { Header } from '../components/Header';
 
 /**
  * Assorted components
@@ -24,26 +25,6 @@ const Row: React.FC<BoxExtendedProps> = ( props ) => {
 const StyledLink = styled.a`
     font-size: 16pt;
 `
-
-/**
- * Mobile Header
- */
-const StyledHeader = styled( Box )`
-    font-size: 24pt;
-    font-weight: 800;
-`
-
-const Header: React.FC<BoxExtendedProps> = ( props ) => {
-    return  <StyledHeader
-                flex={false}
-                tag="header"
-                background="brand"
-                pad="small"
-                align="center"
-                {...props}>
-                {props.children}
-            </StyledHeader>
-}
 
 /**
  * Mobile Footer

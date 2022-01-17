@@ -36,6 +36,13 @@ const App = () => {
                             <Route
                                 exact
                                 render={( props ) => (
+                                    <Page darkMode setDarkMode={setDarkMode} manage/>
+                                )}
+                                path={`/:page/manage`}
+                            />
+                            <Route
+                                exact
+                                render={( props ) => (
                                     <Page darkMode={darkMode} setDarkMode={setDarkMode}/>
                                 )}
                                 path={`/:page&seed=:seed`}
