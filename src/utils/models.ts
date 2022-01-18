@@ -17,29 +17,24 @@ export interface PageData {
     options?: Map<string, OptionData>
 }
 
-export interface Deletable {
+export interface ItemData {
+    id: string
+    displayName: string
+    disabled: boolean
     deleted?: boolean
 }
 
-export interface ModeData extends Deletable {
-    id: string
+export interface ModeData extends ItemData {
     title: string
-    displayName: string
     useFreeSpace: boolean
     groupPerColumn: boolean
-    disabled: boolean
     optionGroups: string[]
 }
 
-export interface OptionGroupData extends Deletable {
-    id: string
-    displayName: string
+export interface OptionGroupData extends ItemData {
     options: string[]
 }
 
-export interface OptionData extends Deletable {
-    id: string
-    text: string
+export interface OptionData extends ItemData {
     tooltip: string
-    disabled: boolean
 }

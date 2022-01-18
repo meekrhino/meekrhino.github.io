@@ -26,7 +26,7 @@ type Row = [BingoSquare, BingoSquare, BingoSquare, BingoSquare, BingoSquare]
 type Board = [Row, Row, Row, Row, Row]
 
 interface TooltippedOption {
-    text: string
+    displayName: string
     tooltip: string
 }
 
@@ -171,7 +171,7 @@ const newBoard = ( options: BingoOption[], seed: string ): Board => {
             return { marked: false, content: s }
         }
         else {
-            return { marked: false, content: s.text, tooltip: s.tooltip }
+            return { marked: false, content: s.displayName, tooltip: s.tooltip }
         }
     } )
 

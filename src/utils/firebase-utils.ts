@@ -271,6 +271,7 @@ class Firebase {
         toFirestore: ( og: OptionGroupData ) => {
             return {
                 displayName: og.displayName,
+                disabed: og.disabled,
                 options: og.options
             }
         },
@@ -283,7 +284,7 @@ class Firebase {
     private optionConverter: FirestoreDataConverter<OptionData> = {
         toFirestore: ( o: OptionData ) => {
             return {
-                text: o.text,
+                displayName: o.displayName,
                 tooltip: o.tooltip,
                 disabled: o.disabled
             }
