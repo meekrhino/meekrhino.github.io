@@ -231,7 +231,7 @@ const ItemRow: React.FC<ItemRowProps> = ( props ) => {
     } )()
 
     return   <Box
-                flex
+                flex={{ grow: 0, shrink: 0 }}
                 alignContent="left"
                 direction="row"
                 align="center"
@@ -311,7 +311,7 @@ const ModeRow:  React.FC<ModeRowProps> = ( props ) => {
 }
 
 /**
- * Mode row
+ * Option Group row
  */
 interface OptionGroupRowProps extends BoxExtendedProps {
     page: PageData
@@ -364,6 +364,55 @@ const OptionGroupRow:  React.FC<OptionGroupRowProps> = ( props ) => {
             </ItemRow>
 }
 
+/**
+ * Option row
+ */
+interface OptionRowProps extends BoxExtendedProps {
+    page: PageData
+    selectedOg: OptionGroupData
+    option: OptionData
+    isSelected: boolean
+    setPageData: ( page: PageData ) => void
+}
+
+const OptionRow:  React.FC<OptionRowProps> = ( props ) => {
+    const isIncluded = props.selectedOg.options.includes(
+        props.option.id
+    )
+
+    const toggleIncluded = () => {
+        const includedOptions = props.selectedOg.options.slice()
+        const thisIndex = includedOptions.findIndex(
+            ( id ) => id == props.option.id
+        )
+        if( thisIndex >= 0 ) {
+            includedOptions.splice( thisIndex, 1 )
+        }
+        else {
+            includedOptions.push( props.option.id )
+        }
+        editOptionGroup(
+            props.page,
+            props.setPageData,
+            props.selectedOg.id,
+            { options: includedOptions }
+        )
+    }
+
+    return  <ItemRow
+                canDelete={true}
+                item={props.option}
+                editFn={editOptionGroup}
+                checked={isIncluded}
+                toggleChecked={toggleIncluded}
+                {...props}>
+                <Box
+                    flex
+                    direction="row">
+                </Box>
+            </ItemRow>
+}
+
 
 /**
  * Manage Page
@@ -374,7 +423,10 @@ const ManagePage: React.FC<Props> = ( props ) => {
     const [ pageState, setPageState ] = React.useState( copyPage( props.data ) )
     const [ selectedMode, setSelectedMode ] = React.useState( pageState.defaultMode )
     const [ selectedOg, setSelectedOg ] = React.useState(
-        Array.from( pageState.optionGroups )[ 0 ][ 1 ].displayName
+        Array.from( pageState.optionGroups.values() )[ 0 ].id
+    )
+    const [ selectedO, setSelectedO ] = React.useState(
+        Array.from( pageState.options.values() )[ 0 ].id
     )
 
     /**
@@ -445,7 +497,13 @@ const ManagePage: React.FC<Props> = ( props ) => {
                         setSelectedOg={setSelectedOg}/>}/>
             <ColumnSection
                 header1="Options"
-                section1={renderOptionsSection()}/>
+                section1={
+                    <OptionsSection
+                        page={pageState}
+                        setPageData={setPageState}
+                        selectedOg={selectedOg}
+                        selectedOption={selectedO}
+                        setSelectedOption={setSelectedO}/>}/>
         </Box>
     </Box>
 }
@@ -694,27 +752,49 @@ interface OptionGroupsSectionProps {
 }
 
 const OptionGroupsSection: React.FC<OptionGroupsSectionProps> = ( props ) => {
-    const ogList = ( Array.from( props.page.optionGroups ) || [] )
-        .sort( ( [ , a ], [ , b ] ) => {
+    const mode = props.page.modes.get( props.selectedMode )
+
+    const ogList = ( Array.from( props.page.optionGroups.values() ) || [] )
+        .sort( ( a, b ) => {
+            const aIsIncluded = mode.optionGroups.includes( a.id )
+            const bIsIncluded = mode.optionGroups.includes( b.id )
+
+            if( aIsIncluded && !bIsIncluded ) {
+                return -1
+            }
+            if( !aIsIncluded && bIsIncluded ) {
+                return 1
+            }
             if( a.displayName < b.displayName ) {
-                return -1;
+                return -1
             }
             if( a.displayName > b.displayName ) {
-                return 1;
+                return 1
             }
-            return 0;
+            return 0
         } )
 
+    const lastIncluded = ( () => {
+        const idx = ogList.findIndex( og => !mode.optionGroups.includes( og.id ) ) - 1
+        return idx == ogList.length? -1 : idx
+    } )()
+
     return  <ColumnSubsection gap="small">
-                {ogList.map( ( [ id, og ] ) => {
-                    return  <OptionGroupRow
-                                key={`og-row-${id}`}
-                                page={props.page}
-                                setPageData={props.setPageData}
-                                selectedMode={props.page.modes.get( props.selectedMode )}
-                                optionGroup={og}
-                                isSelected={og.id == props.selectedOg}
-                                onClick={() => props.setSelectedOg( og.id )}/>
+                {ogList.map( ( og, idx ) => {
+                    return  <Box gap="small" key={`og-row-${og.id}`}>
+                        <OptionGroupRow
+                            page={props.page}
+                            setPageData={props.setPageData}
+                            selectedMode={props.page.modes.get( props.selectedMode )}
+                            optionGroup={og}
+                            isSelected={og.id == props.selectedOg}
+                            onClick={() => props.setSelectedOg( og.id )}/>
+                        {lastIncluded == idx && <Box flex direction="row" align="center">
+                            <Box flex height="0px" border={{ side: "top" }} margin={{ horizontal: "5px" }}/>
+                            <Text>Not Included</Text>
+                            <Box flex height="0px" border={{ side: "top" }} margin={{ horizontal: "5px" }}/>
+                        </Box>}
+                    </Box>
                 } )}
             </ColumnSubsection>
 }
@@ -722,11 +802,59 @@ const OptionGroupsSection: React.FC<OptionGroupsSectionProps> = ( props ) => {
 /**
  * Render option selection section
  */
-const renderOptionsSection = (
+interface OptionsSectionProps {
+    page: PageData
+    setPageData: ( d: PageData ) => void
+    selectedOg: string
+    selectedOption: string
+    setSelectedOption: ( oId: string ) => void
+}
 
-): JSX.Element => {
-    return  <ColumnSubsection>
+const OptionsSection: React.FC<OptionsSectionProps> = ( props ) => {
+    const og = props.page.optionGroups.get( props.selectedOg )
 
+    const oList = ( Array.from( props.page.options.values() ) || [] )
+        .sort( ( a, b ) => {
+            const aIsIncluded = og.options.includes( a.id )
+            const bIsIncluded = og.options.includes( b.id )
+
+            if( aIsIncluded && !bIsIncluded ) {
+                return -1
+            }
+            if( !aIsIncluded && bIsIncluded ) {
+                return 1
+            }
+            if( a.displayName < b.displayName ) {
+                return -1
+            }
+            if( a.displayName > b.displayName ) {
+                return 1
+            }
+            return 0
+        } )
+
+    const lastIncluded = ( () => {
+        const idx = oList.findIndex( o => !og.options.includes( o.id ) ) - 1
+        return idx == oList.length? -1 : idx
+    } )()
+
+    return  <ColumnSubsection gap="small">
+                {oList.map( ( o, idx ) => {
+                    return  <Box gap="small" key={`o-row-${o.id}`}>
+                        <OptionRow
+                            page={props.page}
+                            setPageData={props.setPageData}
+                            selectedOg={props.page.optionGroups.get( props.selectedOg )}
+                            option={o}
+                            isSelected={o.id == props.selectedOption}
+                            onClick={() => props.setSelectedOption( o.id )}/>
+                        {lastIncluded == idx && <Box flex direction="row" align="center">
+                            <Box flex height="0px" border={{ side: "top" }} margin={{ horizontal: "5px" }}/>
+                            <Text>Not Included</Text>
+                            <Box flex height="0px" border={{ side: "top" }} margin={{ horizontal: "5px" }}/>
+                        </Box>}
+                    </Box>
+                } )}
             </ColumnSubsection>
 }
 
