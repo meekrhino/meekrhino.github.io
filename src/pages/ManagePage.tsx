@@ -9,12 +9,13 @@ import {
     TextInputProps
 } from 'grommet'
 import { IconButton } from 'grommet-controls'
-import { Add, Checkbox, CheckboxSelected, Checkmark, Favorite, Trash, Undo } from 'grommet-icons'
+import { Add, Checkbox, CheckboxSelected, Checkmark, Favorite, MoreVertical, Trash, Undo } from 'grommet-icons'
 import { BackgroundType } from 'grommet/utils'
 import * as React from 'react'
 import ReactTooltip from 'react-tooltip'
 import styled from 'styled-components'
 import { ProgressPlugin } from 'webpack'
+import { BingoCell } from '../components/BingoBoard'
 import { Header } from '../components/Header'
 import { FirebaseContext } from '../launch/app'
 import Firebase, { uid } from '../utils/firebase-utils'
@@ -72,7 +73,7 @@ const ColumnSection: React.FC<ColumnSectionProps> = ( props ) => {
 
 const StyledColumnHeader = styled( Box )`
     height: 60px;
-    padding: 8px 30px;
+    padding: 8px 8px 8px 30px;
     width: 100%;
 `
 
@@ -496,7 +497,14 @@ const ManagePage: React.FC<Props> = ( props ) => {
                         selectedOg={selectedOg}
                         setSelectedOg={setSelectedOg}/>}/>
             <ColumnSection
-                header1="Options"
+                header1={
+                    <ItemSectionHeader
+                        title="Options"
+                        button="Add Option"
+                        page={pageState}
+                        setPageData={setPageState}
+                        setSelectedItem={setSelectedO}
+                        newItem={newOption}/>}
                 section1={
                     <OptionsSection
                         page={pageState}
@@ -504,6 +512,10 @@ const ManagePage: React.FC<Props> = ( props ) => {
                         selectedOg={selectedOg}
                         selectedOption={selectedO}
                         setSelectedOption={setSelectedO}/>}/>
+            <BodySection
+                page={pageState}
+                setPageData={setPageState}
+                selectedOption={selectedO}/>
         </Box>
     </Box>
 }
@@ -620,6 +632,7 @@ const ItemSectionHeader: React.FC<ItemHeaderProps> = ( props ) => {
                     <Text>{props.title}</Text>
                 </Box>
                 {addElement}
+                <MoreVertical/>
             </Box>
 
 }
@@ -856,6 +869,83 @@ const OptionsSection: React.FC<OptionsSectionProps> = ( props ) => {
                     </Box>
                 } )}
             </ColumnSubsection>
+}
+
+/**
+ * Body Section
+ */
+interface BodySectionProps extends BoxExtendedProps {
+    page: PageData
+    setPageData: ( d: PageData ) => void
+    selectedOption: string
+}
+
+const BodySection: React.FC<BodySectionProps> = ( props ) => {
+    const option = props.page.options.get( props.selectedOption )
+
+    const [ text, setText ] = React.useState( option.displayName )
+    const [ tooltip, setTooltip ] = React.useState( option.tooltip )
+    const [ optionMarked, setOptionMarked ] = React.useState( false )
+
+    const xStyle: React.CSSProperties = {
+        background: "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1' preserveAspectRatio='none' viewBox='0 0 100 100'><path d='M100 0 L0 100 ' stroke='black' stroke-width='1'/><path d='M0 0 L100 100 ' stroke='black' stroke-width='1'/></svg>\")",
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "center center",
+        backgroundSize: "100% 100%, auto"
+    }
+
+    return  <Box
+                flex
+                fill
+                direction="column">
+                <Labeled
+                    label="Title">
+                    <Box width="240px">
+                        <TextInput
+                            placeholder={`Option text`}
+                            value={text}
+                            onChange={( e ) => setText( e.target.value )}
+                            onBlur={() => editOption(
+                                props.page,
+                                props.setPageData,
+                                props.selectedOption,
+                                { displayName: text }
+                            )}/>
+                    </Box>
+                </Labeled>
+                <Labeled
+                    label="Tooltip">
+                    <TextInput
+                        size="small"
+                        placeholder={`Detailed explanation for option text`}
+                        value={tooltip}
+                        onChange={( e ) => setTooltip( e.target.value )}
+                        onBlur={() => editOption(
+                            props.page,
+                            props.setPageData,
+                            props.selectedOption,
+                            { tooltip: tooltip }
+                        )}/>
+                </Labeled>
+                <Box
+                    align="center">
+                    <Text size="large">Option Preview</Text>
+                    <Box
+                        flex={{ shrink: 0, grow: 0 }}
+                        width={{ min: "300px" }}
+                        height={{ min: "300px" }}
+                        border={{ size: "1px", style: "dashed", color: "black" }}
+                        justify="center"
+                        align="center">
+                        <BingoCell
+                            text={option.displayName}
+                            tooltip={option.tooltip}
+                            marked={optionMarked}
+                            squareSize={120}
+                            toggleCell={() => setOptionMarked( !optionMarked )}/>
+                    </Box>
+                </Box>
+            </Box>
 }
 
 

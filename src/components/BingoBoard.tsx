@@ -1,4 +1,4 @@
-import { Box, BoxProps } from 'grommet'
+import { Box, BoxExtendedProps, BoxProps } from 'grommet'
 import * as React from 'react'
 import styled from 'styled-components'
 import { Colors, fillerData } from '../utils/constants'
@@ -65,6 +65,38 @@ const StyledCell = styled( Box )<StyledCellProps>`
     }
 `
 
+interface BingoCellProps extends BoxExtendedProps {
+    squareSize: number
+    marked: boolean
+    toggleCell: () => void
+    text: string
+    tooltip: string
+}
+
+export const BingoCell: React.FC<BingoCellProps> = ( props ) => {
+    return  <StyledCell
+        dimension={props.squareSize * 0.9}
+        pad={`${props.squareSize * 0.05}px`}
+        marked={props.marked}
+        align="center"
+        justify="center"
+        background={props.marked? Colors["tile-4"] : Colors["tile-1"]}
+        hoverIndicator={props.marked? Colors["tile-3"] : Colors["tile-2"]}
+        border={{ color: Colors["tile-border"], style: "solid", size: "2px" }}
+        onClick={props.toggleCell}
+        onMouseDown={( event: React.MouseEvent ) => event.preventDefault()}
+        data-for={props.tooltip? "tooltip" : undefined}
+        data-tip={props.tooltip}
+        {...props}>
+        <Textfit
+            mode="multi"
+            max={25}
+            style={{ maxHeight: props.squareSize}}>
+            {props.text}
+        </Textfit>
+    </StyledCell>
+}
+
 
 const BingoBoard: React.FC<Props> = ( props ) => {
     const [ board, setBoard ] = React.useState( newBoard( props.options || [], props.seed ) )
@@ -125,27 +157,12 @@ const BingoBoard: React.FC<Props> = ( props ) => {
                         const text = ( props.detailed && cell?.tooltip )? cell.tooltip : cell?.content
                         const tooltip = cell?.tooltip? cell.tooltip: undefined
 
-                        return <StyledCell
-                            key={`bingo_cell_${cellIndex}`}
-                            dimension={squareSize}
-                            pad={`${pad}px`}
-                            marked={cell?.marked}
-                            align="center"
-                            justify="center"
-                            background={cell?.marked? Colors["tile-4"] : Colors["tile-1"]}
-                            hoverIndicator={cell?.marked? Colors["tile-3"] : Colors["tile-2"]}
-                            border={{ color: Colors["tile-border"], style: "solid", size: "2px" }}
-                            onClick={() => toggleCell( rowIndex, cellIndex )}
-                            onMouseDown={( event: React.MouseEvent ) => event.preventDefault()}
-                            data-for={tooltip? "tooltip" : undefined}
-                            data-tip={tooltip}>
-                            <Textfit
-                                mode="multi"
-                                max={25}
-                                style={{ maxHeight: squareSize}}>
-                                {text}
-                            </Textfit>
-                        </StyledCell>
+                        return <BingoCell
+                            squareSize={size}
+                            marked={!!cell?.marked}
+                            toggleCell={() => toggleCell( rowIndex, cellIndex )}
+                            text={text}
+                            tooltip={tooltip}/>
                     } )}
                 </Box>
             )}
