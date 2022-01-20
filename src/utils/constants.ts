@@ -51,7 +51,9 @@ export const Colors: { [colors: string]: ColorType } = {
     "manage-header-border":
                     { dark: "#BDBDBD",  light: "#4F4F4F" },
     "manage-header":{ dark: "#828282",  light: "#F2F2F2" },
-    "error":        { dark: "#CA222F",  light: "#D65656" }
+    "error":        { dark: "#CA222F",  light: "#D65656" },
+    "bubble":       { dark: "#4F4F4F",  light: "#4F4F4F" },
+    "confirm":      { dark: "#085353",  light: "#1B665C" }
 }
 
 export enum Pages {

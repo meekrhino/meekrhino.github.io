@@ -4,19 +4,22 @@ import {
     Button,
     CheckBox,
     Keyboard,
+    Menu,
+    Stack,
     Text,
     TextInput,
-    TextInputProps
+    TextInputProps,
+    Notification
 } from 'grommet'
 import { IconButton } from 'grommet-controls'
-import { Add, Checkbox, CheckboxSelected, Checkmark, Favorite, MoreVertical, Trash, Undo } from 'grommet-icons'
+import { Add, Checkbox, CheckboxSelected, Checkmark, Database, Favorite, MoreVertical, Trash, Undo } from 'grommet-icons'
 import { BackgroundType } from 'grommet/utils'
 import * as React from 'react'
 import ReactTooltip from 'react-tooltip'
 import styled from 'styled-components'
-import { ProgressPlugin } from 'webpack'
 import { BingoCell } from '../components/BingoBoard'
 import { Header } from '../components/Header'
+import OptionImportModal from '../components/OptionImportModal'
 import { FirebaseContext } from '../launch/app'
 import Firebase, { uid } from '../utils/firebase-utils'
 import {
@@ -31,6 +34,11 @@ interface Props {
     data: PageData
     darkMode: boolean
     setDarkMode: ( darkMode: boolean ) => void
+}
+
+interface MenuItem {
+    label: string
+    onClick: () => void
 }
 
 
@@ -53,7 +61,7 @@ const ColumnSection: React.FC<ColumnSectionProps> = ( props ) => {
                 <StyledColumnHeader
                     background="manage-header"
                     justify="center"
-                    border={{ size: "1px", color: "manage-header-border", side: "horizontal" }}>
+                    border={{ size: "1px", color: "manage-header-border", side: "bottom" }}>
                     {props.header1}
                 </StyledColumnHeader>
                 {props.section1}
@@ -124,15 +132,6 @@ const TextInputRTL: React.FC<TextInputProps> = ( props ) => {
     return <TextInput style={rtlStyle} {...props}/>
 }
 
-/**
- * Item rows
- */
-const StyledItemRow = styled( Box )`
-    :hover {
-        background: "red";
-    }
-`
-
 interface ItemRowProps extends BoxExtendedProps {
     page: PageData
     item: ItemData
@@ -147,6 +146,9 @@ interface ItemRowProps extends BoxExtendedProps {
     ) => void
     checked: boolean
     toggleChecked: () => void
+    uses?: number
+    usesTipThis?: string
+    usesTipThat?: string
 }
 
 const ItemRow: React.FC<ItemRowProps> = ( props ) => {
@@ -231,28 +233,36 @@ const ItemRow: React.FC<ItemRowProps> = ( props ) => {
         return true
     } )()
 
-    return   <Box
-                flex={{ grow: 0, shrink: 0 }}
-                alignContent="left"
-                direction="row"
-                align="center"
-                pad={{ horizontal: "10px" }}
-                background={rowColor}
-                style={nameStyle}
-                hoverIndicator={hoverStyle}
-                {...props}>
-                <IconButton
-                    icon={props.checked? <CheckboxSelected color="green"/> : <Checkbox/>}
-                    onClick={toggleChecked}
-                    hoverIndicator={{ color: "transparent" }}/>
-                {nameElement}
-                {props.children}
-                {( props.canDelete || props.item.deleted ) && <IconButton
-                    icon={delIcon}
-                    data-for="tooltip"
-                    data-tip={delTooltip}
-                    onClick={toggleDeleted}/>}
-            </Box>
+    return  <Box
+        flex={{ grow: 0, shrink: 0 }}
+        alignContent="left"
+        direction="row"
+        align="center"
+        pad={{ horizontal: "10px" }}
+        background={rowColor}
+        style={nameStyle}
+        hoverIndicator={hoverStyle}
+        {...props}>
+        <IconButton
+            icon={props.checked? <CheckboxSelected color="green"/> : <Checkbox/>}
+            onClick={toggleChecked}
+            hoverIndicator={{ color: "transparent" }}/>
+        {nameElement}
+        {props.children}
+        {( props.canDelete || props.item.deleted ) && <IconButton
+            icon={delIcon}
+            data-for="tooltip"
+            data-tip={delTooltip}
+            onClick={toggleDeleted}/>}
+        {!!( props.uses && props.uses > 1 ) && <Box
+            background="bubble"
+            pad={{ horizontal: "xsmall" }}
+            round
+            data-for="tooltip"
+            data-tip={`This ${props.usesTipThis} is used in ${props.uses} ${props.usesTipThat}s`}>
+            <Text size="small">{props.uses}</Text>
+        </Box>}
+    </Box>
 }
 
 /**
@@ -351,12 +361,19 @@ const OptionGroupRow:  React.FC<OptionGroupRowProps> = ( props ) => {
         )
     }
 
+    const uses = Array.from( props.page.modes.values() ).filter( ( m ) => (
+        m.optionGroups.includes( props.optionGroup.id )
+    ) ).length
+
     return  <ItemRow
                 canDelete={numUndeletedOgs > 1}
                 item={props.optionGroup}
                 editFn={editOptionGroup}
                 checked={isIncluded}
                 toggleChecked={toggleIncluded}
+                uses={uses}
+                usesTipThis="group"
+                usesTipThat="mode"
                 {...props}>
                 <Box
                     flex
@@ -429,6 +446,14 @@ const ManagePage: React.FC<Props> = ( props ) => {
     const [ selectedO, setSelectedO ] = React.useState(
         Array.from( pageState.options.values() )[ 0 ].id
     )
+    const [ showModal, setShowModal ] = React.useState( false )
+    const [ changes, setChanges ] = React.useState( false )
+    const [ toastVisible, setToastVisible ] = React.useState( false )
+
+    const setPageData = ( d: PageData ) => {
+        setPageState( d )
+        setChanges( true )
+    }
 
     /**
      * Track when changes have been made to toggle save button
@@ -441,6 +466,10 @@ const ManagePage: React.FC<Props> = ( props ) => {
         }
     }, [ pageState ] )
 
+    const toggleModal = () => {
+        setShowModal( !showModal )
+    }
+
     console.log( "rendered" )
 
     return <Box fill height={{ min: "100vh" }}>
@@ -451,48 +480,72 @@ const ManagePage: React.FC<Props> = ( props ) => {
         <Header>
             {`Managing ${"lydlbutton"}'s page`}
         </Header>
-        <Box flex direction="row">
+        <OptionImportModal
+            show={showModal}
+            confirmOptions={( text ) => importOptions( pageState, setPageData, text )}
+            confirmOptionsTooltips={( text ) => (
+                importOptionsWithTooltips( pageState, setPageData, text )
+            )}
+            closeFn={toggleModal}/>
+        {toastVisible && <Notification
+            toast
+            title="Changes Saved"
+            message="All changes have been committed to the database. You can safely close the tab."
+            onClose={() => setToastVisible( false )}/>}
+        <Box
+            flex
+            direction="row"
+            margin="large"
+            round
+            border={{ size: "2px", color: "tile-border" }}
+            style={{ overflow: "hidden" }}>
             <ColumnSection
-                header1="Page"
+                header1={
+                    <PageSectionHeader
+                        page={pageState}
+                        firebase={firebase}
+                        changes={changes}
+                        showToast={() => setToastVisible( true )}
+                        clearChanges={() => setChanges( false )}/>}
                 section1={
                     <PageDataSection
                         page={pageState}
-                        setPageData={setPageState}/>}
+                        setPageData={setPageData}/>}
                 header2={
                     <ItemSectionHeader
                         title="Modes"
-                        button="Add Group"
+                        button="Add Mode"
                         page={pageState}
-                        setPageData={setPageState}
+                        setPageData={setPageData}
                         setSelectedItem={setSelectedMode}
                         newItem={newMode}/>}
                 section2={
                     <ModesSection
                         page={pageState}
-                        setPageData={setPageState}
+                        setPageData={setPageData}
                         selectedMode={selectedMode}
                         setSelectedMode={setSelectedMode}/>}/>
             <ColumnSection
                 header1={
                     <ModeDataHeader
-                        modeName={pageState.modes.get( selectedMode ).displayName}/>}
+                        modeName={`(${pageState.modes.get( selectedMode ).displayName})`}/>}
                 section1={
                     <ModeDataSection
                         page={pageState}
-                        setPageData={setPageState}
+                        setPageData={setPageData}
                         mode={pageState.modes.get( selectedMode )}/>}
                 header2={
                     <ItemSectionHeader
                         title="Option Groups"
                         button="Add Group"
                         page={pageState}
-                        setPageData={setPageState}
+                        setPageData={setPageData}
                         setSelectedItem={setSelectedOg}
                         newItem={newOptionGroup}/>}
                 section2={
                     <OptionGroupsSection
                         page={pageState}
-                        setPageData={setPageState}
+                        setPageData={setPageData}
                         selectedMode={selectedMode}
                         selectedOg={selectedOg}
                         setSelectedOg={setSelectedOg}/>}/>
@@ -502,22 +555,59 @@ const ManagePage: React.FC<Props> = ( props ) => {
                         title="Options"
                         button="Add Option"
                         page={pageState}
-                        setPageData={setPageState}
+                        setPageData={setPageData}
                         setSelectedItem={setSelectedO}
-                        newItem={newOption}/>}
+                        newItem={newOption}
+                        menuItems={[
+                            { label: "Import Options", onClick: toggleModal }
+                        ]}/>}
                 section1={
                     <OptionsSection
                         page={pageState}
-                        setPageData={setPageState}
+                        setPageData={setPageData}
                         selectedOg={selectedOg}
                         selectedOption={selectedO}
                         setSelectedOption={setSelectedO}/>}/>
             <BodySection
                 page={pageState}
-                setPageData={setPageState}
+                setPageData={setPageData}
                 selectedOption={selectedO}/>
         </Box>
     </Box>
+}
+
+interface PageSectionHeaderProps {
+    firebase: Firebase
+    page: PageData
+    changes: boolean
+    clearChanges: () => void
+    showToast: () => void
+    menuItems?: MenuItem[]
+}
+
+const PageSectionHeader: React.FC<PageSectionHeaderProps> = ( props ) => {
+    const save = () => {
+        props.clearChanges()
+        commitChanges( props.firebase, props.page, props.showToast )
+    }
+
+    return  <Box flex direction="row" justify="between" align="center">
+                <Box width={{ min: defaultLabelWidth }} justify="center">
+                    <Text>Page</Text>
+                </Box>
+                <Button
+                    icon={<Database/>}
+                    label="Save Changes"
+                    color="confirm"
+                    disabled={!props.changes}
+                    onClick={save}/>
+                {props.menuItems && <Menu
+                    dropAlign={{ right: "right", top: "bottom" }}
+                    hoverIndicator
+                    items={props.menuItems}>
+                    <MoreVertical />
+                </Menu>}
+            </Box>
 }
 
 /**
@@ -574,11 +664,13 @@ interface ItemHeaderProps {
     setPageData: ( d: PageData ) => void
     setSelectedItem: ( id: string ) => void
     newItem: newItemFn
+    menuItems?: MenuItem[]
 }
 
 const ItemSectionHeader: React.FC<ItemHeaderProps> = ( props ) => {
     const [ adding, setAdding ] = React.useState( false )
     const [ addingName, setAddingName ] = React.useState( "" )
+    const [ menuOpen, setMenuOpen ] = React.useState( false )
 
     const onBlur = () => {
         setAdding( false )
@@ -632,9 +724,13 @@ const ItemSectionHeader: React.FC<ItemHeaderProps> = ( props ) => {
                     <Text>{props.title}</Text>
                 </Box>
                 {addElement}
-                <MoreVertical/>
+                {props.menuItems && <Menu
+                    dropAlign={{ right: "right", top: "bottom" }}
+                    hoverIndicator
+                    items={props.menuItems}>
+                    <MoreVertical />
+                </Menu>}
             </Box>
-
 }
 
 /**
@@ -887,17 +983,17 @@ const BodySection: React.FC<BodySectionProps> = ( props ) => {
     const [ tooltip, setTooltip ] = React.useState( option.tooltip )
     const [ optionMarked, setOptionMarked ] = React.useState( false )
 
-    const xStyle: React.CSSProperties = {
-        background: "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1' preserveAspectRatio='none' viewBox='0 0 100 100'><path d='M100 0 L0 100 ' stroke='black' stroke-width='1'/><path d='M0 0 L100 100 ' stroke='black' stroke-width='1'/></svg>\")",
-        backgroundRepeat: "no-repeat",
-        backgroundPosition: "center center",
-        backgroundSize: "100% 100%, auto"
-    }
+    React.useEffect( () => {
+        setText( option.displayName )
+        setTooltip( option.tooltip )
+        setOptionMarked( false )
+    }, [ props.selectedOption ] )
 
     return  <Box
                 flex
                 fill
-                direction="column">
+                direction="column"
+                pad="25px">
                 <Labeled
                     label="Title">
                     <Box width="240px">
@@ -928,15 +1024,23 @@ const BodySection: React.FC<BodySectionProps> = ( props ) => {
                         )}/>
                 </Labeled>
                 <Box
-                    align="center">
+                    align="center"
+                    margin={{ top: "100px" }}>
                     <Text size="large">Option Preview</Text>
+                    <Box height="25px">
+                        <Text color="error">{option.deleted && "(Deleted)"}</Text>
+                    </Box>
                     <Box
                         flex={{ shrink: 0, grow: 0 }}
                         width={{ min: "300px" }}
                         height={{ min: "300px" }}
-                        border={{ size: "1px", style: "dashed", color: "black" }}
+                        border={{
+                            size: "2px",
+                            style: "dashed",
+                            color: option.deleted? "error" : "tile-border" }}
                         justify="center"
-                        align="center">
+                        align="center"
+                        margin="20px">
                         <BingoCell
                             text={option.displayName}
                             tooltip={option.tooltip}
@@ -965,8 +1069,12 @@ const copyPage = ( page: PageData ): PageData => {
 /**
  * Commit function
  */
-const commitChanges = ( firebase: Firebase, page: PageData ) => {
-    firebase.writePageData( "lydlbutton", page )
+const commitChanges = (
+    firebase: Firebase,
+    page: PageData,
+    saveToast?: () => void
+) => {
+    firebase.writePageData( "lydlbutton", page ).then( saveToast )
 }
 
 
@@ -1038,13 +1146,12 @@ const newOptionGroup: newItemFn = (
     return newOg
 }
 
-const newOption: newItemFn = (
+const newOption = (
     page: PageData,
     setPageData: ( d: PageData ) => void,
-    name: string
-) => {
-    const newState = copyPage( page )
-
+    name: string,
+    noSet?: boolean
+): OptionData => {
     const newId = uid()
     const newO: OptionData = {
         id: newId,
@@ -1052,9 +1159,38 @@ const newOption: newItemFn = (
         tooltip: "",
         disabled: false
     }
-    newState.options.set( newId, newO )
 
-    setPageData( newState )
+    if( !noSet ) {
+        const newState = copyPage( page )
+        newState.options.set( newId, newO )
+        setPageData( newState )
+    }
+
+    return newO
+}
+
+const newOptionWithTooltip = (
+    page: PageData,
+    setPageData: ( d: PageData ) => void,
+    name: string,
+    tooltip: string,
+    noSet?: boolean
+) => {
+
+    const newId = uid()
+    const newO: OptionData = {
+        id: newId,
+        displayName: name,
+        tooltip: tooltip,
+        disabled: false
+    }
+
+    if( !noSet ) {
+        const newState = copyPage( page )
+        newState.options.set( newId, newO )
+        setPageData( newState )
+    }
+
     return newO
 }
 
@@ -1117,5 +1253,45 @@ const editOption = (
 
     setPageData( newState )
 }
+
+/**
+ * Helper functions
+ */
+const importOptions = (
+    page: PageData,
+    setPageData: ( d: PageData ) => void,
+    optionsData: string
+) => {
+    const options = optionsData.split( "," )?.map( ( o ) =>
+        newOption( page, setPageData, o )
+    )
+
+    const newState = copyPage( page )
+    options.forEach( ( o ) => {
+        newState.options.set( o.id, o )
+    } )
+    setPageData( newState )
+}
+
+const importOptionsWithTooltips = (
+    page: PageData,
+    setPageData: ( d: PageData ) => void,
+    optionsData: string
+) => {
+    const items = optionsData.replace(/(\r\n|\n|\r)/gm, "").split( "," )
+    const options = items.filter( ( i, idx ) => idx % 2 == 0 )
+    const optionTooltips = items.filter( ( i, idx ) => idx % 2 == 1 )
+
+    const newOptions = options.map( ( o, idx ) =>
+        newOptionWithTooltip( page, setPageData, o, optionTooltips[ idx ] )
+    )
+
+    const newState = copyPage( page )
+    newOptions.forEach( ( o ) => {
+        newState.options.set( o.id, o )
+    } )
+    setPageData( newState )
+}
+
 
 export default ManagePage

@@ -147,13 +147,17 @@ class Firebase {
     writePageData = async ( user: string, data: PageData ) => {
         // Write page
         const pageRef = doc( this._db, "pages", user )
+            .withConverter( this.pageConverter )
 
+        console.log( "Begin page write" )
         await setDoc( pageRef, data )
 
+        console.log( "Begin mode write" )
         // Write modes
         const modePromises: Promise<void>[] = []
         data.modes.forEach( ( m ) => {
             const modeRef = doc( this._db, "pages", user, "modes", m.id )
+                .withConverter( this.modeConverter )
 
             if( m.deleted ) {
                 modePromises.push( deleteDoc( modeRef ) )
@@ -164,10 +168,12 @@ class Firebase {
         } )
         await Promise.all( modePromises )
 
+        console.log( "Begin option group write" )
         // Write option groups
         const ogPromises: Promise<void>[] = []
         data.optionGroups.forEach( ( og ) => {
             const ogRef = doc( this._db, "pages", user, "optionGroups", og.id )
+            .withConverter( this.optionGroupConverter )
 
             if( og.deleted ) {
                 ogPromises.push( deleteDoc( ogRef ) )
@@ -178,10 +184,12 @@ class Firebase {
         } )
         await Promise.all( ogPromises )
 
+        console.log( "Begin option write" )
         // Write options
         const oPromises: Promise<void>[] = []
         data.options.forEach( ( o ) => {
             const oRef = doc( this._db, "pages", user, "options", o.id )
+                .withConverter( this.optionConverter )
 
             if( o.deleted ) {
                 oPromises.push( deleteDoc( oRef ) )
@@ -246,7 +254,7 @@ class Firebase {
             }
         },
         fromFirestore: ( snapshot, options ) => {
-            const data = snapshot.data( options );
+            const data = snapshot.data( options )
             return { ...data } as PageData
         }
     }
@@ -257,12 +265,12 @@ class Firebase {
                 displayName: mode.displayName,
                 useFreeSpace: mode.useFreeSpace,
                 groupPerColumn: mode.groupPerColumn,
-                disabled: mode.disabled,
+                disabled: !!mode.disabled,
                 optionGroups: mode.optionGroups
             }
         },
         fromFirestore: ( snapshot, options ) => {
-            const data = snapshot.data( options );
+            const data = snapshot.data( options )
             return { ...data, id: snapshot.id } as ModeData
         }
     }
@@ -271,12 +279,12 @@ class Firebase {
         toFirestore: ( og: OptionGroupData ) => {
             return {
                 displayName: og.displayName,
-                disabed: og.disabled,
+                disabled: !!og.disabled,
                 options: og.options
             }
         },
         fromFirestore: ( snapshot, options ) => {
-            const data = snapshot.data( options );
+            const data = snapshot.data( options )
             return { ...data, id: snapshot.id } as OptionGroupData
         }
     }
@@ -286,11 +294,11 @@ class Firebase {
             return {
                 displayName: o.displayName,
                 tooltip: o.tooltip,
-                disabled: o.disabled
+                disabled: !!o.disabled
             }
         },
         fromFirestore: ( snapshot, options ) => {
-            const data = snapshot.data( options );
+            const data = snapshot.data( options )
             return { ...data, id: snapshot.id } as OptionData
         }
     }
