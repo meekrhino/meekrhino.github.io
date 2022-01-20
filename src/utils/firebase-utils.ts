@@ -263,6 +263,7 @@ class Firebase {
         toFirestore: ( mode: ModeData ) => {
             return {
                 displayName: mode.displayName,
+                title: mode.title,
                 useFreeSpace: mode.useFreeSpace,
                 groupPerColumn: mode.groupPerColumn,
                 disabled: !!mode.disabled,

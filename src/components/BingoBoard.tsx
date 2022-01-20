@@ -158,6 +158,7 @@ const BingoBoard: React.FC<Props> = ( props ) => {
                         const tooltip = cell?.tooltip? cell.tooltip: undefined
 
                         return <BingoCell
+                            key={`bingo_cell_${cellIndex}`}
                             squareSize={size}
                             marked={!!cell?.marked}
                             toggleCell={() => toggleCell( rowIndex, cellIndex )}

@@ -83,6 +83,7 @@ const StyledColumnHeader = styled( Box )`
     height: 60px;
     padding: 8px 8px 8px 30px;
     width: 100%;
+    flex-shrink: 0;
 `
 
 /**
@@ -234,7 +235,6 @@ const ItemRow: React.FC<ItemRowProps> = ( props ) => {
     } )()
 
     return  <Box
-        flex={{ grow: 0, shrink: 0 }}
         alignContent="left"
         direction="row"
         align="center"
@@ -301,14 +301,15 @@ const ModeRow:  React.FC<ModeRowProps> = ( props ) => {
             .filter( m => !m.deleted ).length
 
     return  <ItemRow
+                {...props}
+                flex={{ grow: 0, shrink: 0 }}
                 canDelete={numUndeletedModes > 1}
                 item={props.mode}
                 editFn={editMode}
                 checked={!props.mode.disabled}
-                toggleChecked={toggleDisabled}
-                {...props}>
+                toggleChecked={toggleDisabled}>
                 <Box
-                    flex
+                    flex={{ grow: 0, shrink: 0 }}
                     direction="row"
                     align="center"
                     justify="end">
@@ -472,7 +473,7 @@ const ManagePage: React.FC<Props> = ( props ) => {
 
     console.log( "rendered" )
 
-    return <Box fill height={{ min: "100vh" }}>
+    return <Box fill height={{ min: "100vh", max: "100vh" }}>
         <ReactTooltip
             id="tooltip"
             effect="solid"
@@ -719,7 +720,10 @@ const ItemSectionHeader: React.FC<ItemHeaderProps> = ( props ) => {
                     style={{ display: "inherit", padding: "8px" }}/>
     })()
 
-    return  <Box flex direction="row" justify="between" align="center">
+    return  <Box
+                direction="row"
+                justify="between"
+                align="center">
                 <Box width={{ min: defaultLabelWidth }} justify="center">
                     <Text>{props.title}</Text>
                 </Box>
@@ -947,9 +951,13 @@ const OptionsSection: React.FC<OptionsSectionProps> = ( props ) => {
         return idx == oList.length? -1 : idx
     } )()
 
-    return  <ColumnSubsection gap="small">
+    return  <ColumnSubsection
+                gap="small"
+                flex
+                height="200px"
+                overflow="auto">
                 {oList.map( ( o, idx ) => {
-                    return  <Box gap="small" key={`o-row-${o.id}`}>
+                    return  <Box gap="small" key={`o-row-${o.id}`} flex={{ grow: 0, shrink: 0 }}>
                         <OptionRow
                             page={props.page}
                             setPageData={props.setPageData}
