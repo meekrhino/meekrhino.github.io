@@ -6,11 +6,11 @@ import { Textfit } from 'react-textfit'
 import ReactTooltip from 'react-tooltip'
 import { newRand } from '../utils/rng'
 import { isMobile } from 'react-device-detect'
+import { OptionData } from '../utils/models'
 
 interface Props {
-    title: string
     seed: string
-    options?: BingoOption[]
+    options: OptionData[]
     detailed?: boolean
 }
 
@@ -21,12 +21,12 @@ interface BingoSquare {
     image?: string
 }
 
-type Row = [BingoSquare, BingoSquare, BingoSquare, BingoSquare, BingoSquare]
+type Row = [ BingoSquare, BingoSquare, BingoSquare, BingoSquare, BingoSquare ]
 
-type Board = [Row, Row, Row, Row, Row]
+type Board = [ Row, Row, Row, Row, Row ]
 
 interface TooltippedOption {
-    displayName: string
+    text: string
     tooltip: string
 }
 
@@ -101,6 +101,10 @@ export const BingoCell: React.FC<BingoCellProps> = ( props ) => {
 const BingoBoard: React.FC<Props> = ( props ) => {
     const [ board, setBoard ] = React.useState( newBoard( props.options || [], props.seed ) )
 
+    React.useEffect( () => {
+        setBoard( newBoard( props.options || [], props.seed ) )
+    }, [ props.options ] )
+
     const borderSpacing = 2;
     const calcSize = () => {
         if( isMobile ) {
@@ -171,14 +175,21 @@ const BingoBoard: React.FC<Props> = ( props ) => {
     )
 }
 
-const newBoard = ( options: BingoOption[], seed: string ): Board => {
+const newBoard = ( options: OptionData[], seed: string ): Board => {
     const rand = newRand( seed )
 
-    const newOptions = ((): BingoOption[] => {
-        if( options.length < 24 ) {
-            return options.concat( fillerData.slice( 0, 24 - options.length ) ).slice()
+    const newOptions = ( (): BingoOption[] => {
+        const bingoOptions: BingoOption[] = options.filter( o => !o.disabled ).map( o => {
+            return {
+                text: o.displayName,
+                tooltip: o.tooltip
+            }
+        } )
+
+        if( bingoOptions.length < 24 ) {
+            return bingoOptions.concat( fillerData.slice( 0, 24 - bingoOptions.length ) ).slice()
         }
-        return options.slice()
+        return bingoOptions.slice()
     })().sort( () => 0.5 - rand() ).slice( 0, 24 )
 
     newOptions.splice( 12, 0, "Free Space" )
@@ -189,7 +200,7 @@ const newBoard = ( options: BingoOption[], seed: string ): Board => {
             return { marked: false, content: s }
         }
         else {
-            return { marked: false, content: s.displayName, tooltip: s.tooltip }
+            return { marked: false, content: s.text, tooltip: s.tooltip }
         }
     } )
 

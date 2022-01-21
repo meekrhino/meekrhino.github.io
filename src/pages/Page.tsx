@@ -24,8 +24,8 @@ const Page: React.FC<PageProps> = ( props ) => {
         firebase.getPageData( page ).then( d => setPageData( d ) )
     }, [] )
 
-    if( props.manage && pageData ) {
-        if( isMobile ) {
+    if( props.manage ) {
+        if( isMobile || !pageData ) {
             return null
         }
         return <ManagePage
@@ -34,27 +34,11 @@ const Page: React.FC<PageProps> = ( props ) => {
                     setDarkMode={props.setDarkMode} />
     }
 
-    if( props.manage ) {
-        return null
-    }
-
     if( seed ) {
-        switch( page ) {
-            case Pages.DIGIMON:
-                return <BingoPage
-                    {...props}
-                    root={page}
-                    title="digimon world rando bingo"
-                    seed={seed}/>
-
-            default:
-                return pageData && <BingoPage
-                    {...props}
-                    root={pageData.root}
-                    title={pageData.modes.get( pageData.defaultMode ).title}
-                    options={Array.from( pageData.options.values() )}
-                    seed={seed}/>
-        }
+        return pageData && <BingoPage
+            {...props}
+            data={pageData}
+            seed={seed}/>
     }
     else {
         const newSeed = xmur3( ""+Math.random() )()

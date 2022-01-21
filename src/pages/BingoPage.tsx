@@ -1,9 +1,9 @@
 import * as React from 'react'
 import styled from "styled-components";
 import BingoBoard, { BingoOption } from "../components/BingoBoard";
-import { Box, BoxExtendedProps, Button, CheckBox, Text } from "grommet"
+import { Box, BoxExtendedProps, Button, CheckBox, Select, Text } from "grommet"
 import { useHistory } from 'react-router-dom';
-import { PageProps } from '../utils/models';
+import { ModeData, OptionData, PageData, PageProps } from '../utils/models';
 import { BrowserView, isMobile, MobileView } from 'react-device-detect';
 import { Header } from '../components/Header';
 
@@ -56,41 +56,70 @@ const MobileFooterButton: React.FC<BoxExtendedProps> = ( props ) => {
  * Page props
  */
  export interface BingoPageProps extends PageProps {
-    root: string
-    title: string
+    data: PageData
     seed: string
-    options?: BingoOption[]
 }
 
 /**
  * Page renderer
  */
 const BingoPage: React.FC<BingoPageProps> = ( props ) => {
+    const getOptionsFromMode = ( mode: ModeData ) => {
+        const activeOptionGroups = mode.optionGroups
+        .map( og => props.data.optionGroups.get( og ) )
+
+        return activeOptionGroups.reduce(
+            ( prev, current ) =>
+                prev.concat( current.options.map( o => props.data.options.get( o ) )
+            ), [] as OptionData[]
+        )
+    }
+
     const [ info, setInfo ] = React.useState( false )
     const history = useHistory()
+    const [ mode, setMode ] = React.useState( props.data.modes.get( props.data.defaultMode ) )
+    const [ options, setOptions ] = React.useState( getOptionsFromMode( mode ) )
+
+    React.useEffect( () => {
+        const newOptions = getOptionsFromMode( mode )
+        setOptions( newOptions )
+    }, [ mode.id ] )
 
     const resetSeed = ( () => {
-        history.push( props.root )
+        history.push( props.data.root )
     } )
 
-    const anyTooltip = !!props.options?.find( o => typeof o !== "string" && o.tooltip )
+    const modeSelect =
+        <Select
+            options={Array.from( props.data.modes.values() )}
+            value={mode}
+            onChange={( { option } ) => setMode( option )}
+            labelKey="displayName"/>
+
+    const anyTooltip = !!options?.find( o => typeof o !== "string" && o.tooltip )
     return  <Box>
         <BrowserView>
             {renderDesktopVersion(
                 props,
+                mode.title,
+                options,
                 anyTooltip,
                 info,
                 setInfo,
-                resetSeed
+                resetSeed,
+                modeSelect
             )}
         </BrowserView>
         <MobileView>
             {renderMobileVersion(
                 props,
+                mode.title,
+                options,
                 anyTooltip,
                 info,
                 setInfo,
-                resetSeed
+                resetSeed,
+                modeSelect
             )}
         </MobileView>
     </Box>
@@ -101,15 +130,18 @@ const BingoPage: React.FC<BingoPageProps> = ( props ) => {
  */
 const renderDesktopVersion = (
     props: BingoPageProps,
+    title: string,
+    options: OptionData[],
     anyTooltip: boolean,
     info: boolean,
     setInfo: ( info: boolean ) => void,
-    resetSeed: () => void
+    resetSeed: () => void,
+    modeSelect: JSX.Element
 ) => {
     return  (
         <Box fill gap="small" height={{ min: "100vh" }}>
             <Header>
-                {props.title}
+                {title}
             </Header>
             <Box flex={{ grow: 0 }} align="center" gap="medium" overflow="auto">
                 <Row>
@@ -132,10 +164,11 @@ const renderDesktopVersion = (
                         New Card
                     </Button>
                 </Row>
-                <StyledLink href="https://docs.google.com/document/d/1Waefod2BSDOGfPOZQGCF1payGVe54fT8zIHIoMsuOog/edit?usp=sharing">
-                    Rules and Glossary
+                {modeSelect}
+                {renderBoard( props, options, info )}
+                <StyledLink href={props.data.externalLink}>
+                    {props.data.externalLinkText}
                 </StyledLink>
-                {renderBoard( props, info )}
             </Box>
         </Box>
     )
@@ -146,22 +179,26 @@ const renderDesktopVersion = (
  */
 const renderMobileVersion = (
     props: BingoPageProps,
+    title: string,
+    options: OptionData[],
     anyTooltip: boolean,
     info: boolean,
     setInfo: ( info: boolean ) => void,
-    resetSeed: () => void
+    resetSeed: () => void,
+    modeSelect: JSX.Element
 ) => {
     return  (
         <Box fill gap="small">
             <Header>
-                {props.title}
+                {title}
             </Header>
             <Box flex align='center' gap="medium" overflow="auto">
-                {renderBoard( props, info )}
+                {renderBoard( props, options, info )}
                 {anyTooltip && <CheckBox
                     checked={info}
                     onChange={( e ) => setInfo( e.target.checked )}
                     label="Show Detailed Info" />}
+                {modeSelect}
                 <StyledLink href="https://docs.google.com/document/d/1Waefod2BSDOGfPOZQGCF1payGVe54fT8zIHIoMsuOog/edit?usp=sharing">
                     Rules and Glossary
                 </StyledLink>
@@ -185,8 +222,13 @@ const renderMobileVersion = (
 /**
  * Render the bingo board
  */
-const renderBoard = ( props: BingoPageProps, detailed: boolean ) => {
+const renderBoard = (
+    props: BingoPageProps,
+    options: OptionData[],
+    detailed: boolean
+) => {
     return  <BingoBoard
+                options={options}
                 detailed={detailed}
                 {...props}/>
 }
