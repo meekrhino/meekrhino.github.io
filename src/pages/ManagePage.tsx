@@ -9,12 +9,15 @@ import {
     Text,
     TextInput,
     TextInputProps,
-    Notification
+    Notification,
+    Spinner,
+    Layer
 } from 'grommet'
 import { IconButton } from 'grommet-controls'
 import { Add, Checkbox, CheckboxSelected, Checkmark, Database, Favorite, MoreVertical, Trash, Undo } from 'grommet-icons'
 import { BackgroundType } from 'grommet/utils'
 import * as React from 'react'
+import { RingLoader } from 'react-spinners'
 import ReactTooltip from 'react-tooltip'
 import styled from 'styled-components'
 import { BingoCell } from '../components/BingoBoard'
@@ -309,7 +312,7 @@ const ModeRow:  React.FC<ModeRowProps> = ( props ) => {
                 checked={!props.mode.disabled}
                 toggleChecked={toggleDisabled}>
                 <Box
-                    flex={{ grow: 0, shrink: 0 }}
+                    flex={{ grow: 1, shrink: 0 }}
                     direction="row"
                     align="center"
                     justify="end">
@@ -449,6 +452,7 @@ const ManagePage: React.FC<Props> = ( props ) => {
     )
     const [ showModal, setShowModal ] = React.useState( false )
     const [ changes, setChanges ] = React.useState( false )
+    const [ saving, setSaving ] = React.useState( false )
     const [ toastVisible, setToastVisible ] = React.useState( false )
 
     const setPageData = ( d: PageData ) => {
@@ -488,6 +492,9 @@ const ManagePage: React.FC<Props> = ( props ) => {
                 importOptionsWithTooltips( pageState, setPageData, text )
             )}
             closeFn={toggleModal}/>
+        {saving && <Layer background={{opacity: 0}}>
+            <RingLoader size={200}/>
+        </Layer>}
         {toastVisible && <Notification
             toast
             title="Changes Saved"
@@ -506,6 +513,7 @@ const ManagePage: React.FC<Props> = ( props ) => {
                         page={pageState}
                         firebase={firebase}
                         changes={changes}
+                        setSaving={setSaving}
                         showToast={() => setToastVisible( true )}
                         clearChanges={() => setChanges( false )}/>}
                 section1={
@@ -580,6 +588,7 @@ const ManagePage: React.FC<Props> = ( props ) => {
 interface PageSectionHeaderProps {
     firebase: Firebase
     page: PageData
+    setSaving: ( saving: boolean ) => void
     changes: boolean
     clearChanges: () => void
     showToast: () => void
@@ -588,8 +597,18 @@ interface PageSectionHeaderProps {
 
 const PageSectionHeader: React.FC<PageSectionHeaderProps> = ( props ) => {
     const save = () => {
+        props.setSaving( true )
+        commitChanges(
+            props.firebase,
+            props.page,
+            saveCb
+        )
+    }
+
+    const saveCb = () => {
         props.clearChanges()
-        commitChanges( props.firebase, props.page, props.showToast )
+        props.setSaving( false )
+        props.showToast()
     }
 
     return  <Box flex direction="row" justify="between" align="center">
@@ -1080,8 +1099,11 @@ const copyPage = ( page: PageData ): PageData => {
 const commitChanges = (
     firebase: Firebase,
     page: PageData,
-    saveToast?: () => void
+    saveToast?: () => void,
+    cb?: () => void
 ) => {
+
+
     firebase.writePageData( "lydlbutton", page ).then( saveToast )
 }
 
