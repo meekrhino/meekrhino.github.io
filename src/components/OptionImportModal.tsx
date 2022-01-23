@@ -42,7 +42,8 @@ const OptionImportModal: React.FC<OptionImportModalProps> = ( props ) => {
         list. To import options with tooltips, enter
         a comma separated list where the first item is an
         option, the second is that option's tooltip,
-        and so on.
+        and so on. Options will be added to the selected
+        Option Group.
     `
 
     return props.show &&

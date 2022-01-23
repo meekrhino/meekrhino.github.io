@@ -191,9 +191,6 @@ const newBoard = (
 ): Board => {
     const rand = newRand( seed )
 
-    console.log( "free space is set to " )
-    console.log( freeSpace )
-
     const numTiles = freeSpace? 24 : 25
 
     const newOptions = ( (): BingoOption[] => {

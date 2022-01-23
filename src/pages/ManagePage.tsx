@@ -59,7 +59,7 @@ interface ColumnSectionProps extends BoxExtendedProps {
 const ColumnSection: React.FC<ColumnSectionProps> = ( props ) => {
     return <Box
                 direction="column"
-                width="20%"
+                width="min( 25%, 400px )"
                 border={{ size: "1px", color: "tile-border", side: "right" }}>
                 <StyledColumnHeader
                     background="manage-header"
@@ -487,9 +487,10 @@ const ManagePage: React.FC<Props> = ( props ) => {
         </Header>
         <OptionImportModal
             show={showModal}
-            confirmOptions={( text ) => importOptions( pageState, setPageData, text )}
+            confirmOptions={( text ) =>
+                importOptions( pageState, setPageData,  selectedOg, text )}
             confirmOptionsTooltips={( text ) => (
-                importOptionsWithTooltips( pageState, setPageData, text )
+                importOptionsWithTooltips( pageState, setPageData, selectedOg, text )
             )}
             closeFn={toggleModal}/>
         {saving && <Layer background={{opacity: 0}}>
@@ -525,6 +526,7 @@ const ManagePage: React.FC<Props> = ( props ) => {
                         title="Modes"
                         button="Add Mode"
                         page={pageState}
+                        selectedParent={undefined}
                         setPageData={setPageData}
                         setSelectedItem={setSelectedMode}
                         newItem={newMode}/>}
@@ -549,6 +551,7 @@ const ManagePage: React.FC<Props> = ( props ) => {
                         button="Add Group"
                         page={pageState}
                         setPageData={setPageData}
+                        selectedParent={selectedMode}
                         setSelectedItem={setSelectedOg}
                         newItem={newOptionGroup}/>}
                 section2={
@@ -565,6 +568,7 @@ const ManagePage: React.FC<Props> = ( props ) => {
                         button="Add Option"
                         page={pageState}
                         setPageData={setPageData}
+                        selectedParent={selectedOg}
                         setSelectedItem={setSelectedO}
                         newItem={newOption}
                         menuItems={[
@@ -682,6 +686,7 @@ interface ItemHeaderProps {
     button: string
     page: PageData
     setPageData: ( d: PageData ) => void
+    selectedParent: string
     setSelectedItem: ( id: string ) => void
     newItem: newItemFn
     menuItems?: MenuItem[]
@@ -690,7 +695,6 @@ interface ItemHeaderProps {
 const ItemSectionHeader: React.FC<ItemHeaderProps> = ( props ) => {
     const [ adding, setAdding ] = React.useState( false )
     const [ addingName, setAddingName ] = React.useState( "" )
-    const [ menuOpen, setMenuOpen ] = React.useState( false )
 
     const onBlur = () => {
         setAdding( false )
@@ -699,7 +703,13 @@ const ItemSectionHeader: React.FC<ItemHeaderProps> = ( props ) => {
 
     const onConfirm = () => {
         if( addingName ) {
-            const newItem = props.newItem( props.page, props.setPageData, addingName )
+            const newItem = props.newItem(
+                props.page,
+                props.setPageData,
+                props.selectedParent,
+                addingName
+            )
+            console.log( newItem )
             props.setSelectedItem( newItem.id )
         }
 
@@ -1040,6 +1050,7 @@ const BodySection: React.FC<BodySectionProps> = ( props ) => {
                     label="Tooltip">
                     <TextInput
                         size="small"
+                        style={{ textOverflow: "ellipsis" }}
                         placeholder={`Detailed explanation for option text`}
                         value={tooltip}
                         onChange={( e ) => setTooltip( e.target.value )}
@@ -1130,12 +1141,14 @@ const toggleDeletion = (
 type newItemFn = (
     page: PageData,
     setPageData: ( d: PageData ) => void,
+    container: string,
     name: string
 ) => ItemData
 
 const newMode: newItemFn = (
     page: PageData,
     setPageData: ( d: PageData ) => void,
+    container: string,
     name: string
 ) => {
     const newState = copyPage( page )
@@ -1159,6 +1172,7 @@ const newMode: newItemFn = (
 const newOptionGroup: newItemFn = (
     page: PageData,
     setPageData: ( d: PageData ) => void,
+    addToMode: string,
     name: string
 ) => {
     const newState = copyPage( page )
@@ -1172,6 +1186,10 @@ const newOptionGroup: newItemFn = (
     }
     newState.optionGroups.set( newId, newOg )
 
+    if( addToMode ) {
+        newState.modes.get( addToMode ).optionGroups.push( newId )
+    }
+
     setPageData( newState )
     return newOg
 }
@@ -1179,6 +1197,7 @@ const newOptionGroup: newItemFn = (
 const newOption = (
     page: PageData,
     setPageData: ( d: PageData ) => void,
+    addToGroup: string,
     name: string,
     noSet?: boolean
 ): OptionData => {
@@ -1194,6 +1213,13 @@ const newOption = (
         const newState = copyPage( page )
         newState.options.set( newId, newO )
         setPageData( newState )
+
+        if( addToGroup ) {
+            console.log( addToGroup )
+            console.log( newState.optionGroups )
+            console.log( newState.optionGroups.get( addToGroup ) )
+            newState.optionGroups.get( addToGroup ).options.push( newId )
+        }
     }
 
     return newO
@@ -1202,6 +1228,7 @@ const newOption = (
 const newOptionWithTooltip = (
     page: PageData,
     setPageData: ( d: PageData ) => void,
+    addToGroup: string,
     name: string,
     tooltip: string,
     noSet?: boolean
@@ -1219,6 +1246,10 @@ const newOptionWithTooltip = (
         const newState = copyPage( page )
         newState.options.set( newId, newO )
         setPageData( newState )
+
+        if( addToGroup ) {
+            newState.optionGroups.get( addToGroup ).options.push( newId )
+        }
     }
 
     return newO
@@ -1290,15 +1321,18 @@ const editOption = (
 const importOptions = (
     page: PageData,
     setPageData: ( d: PageData ) => void,
+    selectedOptionGroup: string,
     optionsData: string
 ) => {
     const options = optionsData.split( "," )?.map( ( o ) =>
-        newOption( page, setPageData, o )
+        newOption( page, setPageData, selectedOptionGroup, o.trim() )
     )
 
     const newState = copyPage( page )
+    const og = newState.optionGroups.get( selectedOptionGroup )
     options.forEach( ( o ) => {
         newState.options.set( o.id, o )
+        og.options.push( o.id )
     } )
     setPageData( newState )
 }
@@ -1306,19 +1340,28 @@ const importOptions = (
 const importOptionsWithTooltips = (
     page: PageData,
     setPageData: ( d: PageData ) => void,
+    selectedOptionGroup: string,
     optionsData: string
 ) => {
-    const items = optionsData.replace(/(\r\n|\n|\r)/gm, "").split( "," )
+    const items = optionsData.split( "," )
     const options = items.filter( ( i, idx ) => idx % 2 == 0 )
     const optionTooltips = items.filter( ( i, idx ) => idx % 2 == 1 )
 
     const newOptions = options.map( ( o, idx ) =>
-        newOptionWithTooltip( page, setPageData, o, optionTooltips[ idx ] )
+        newOptionWithTooltip(
+            page,
+            setPageData,
+            selectedOptionGroup,
+            o.trim(),
+            optionTooltips[ idx ]
+        )
     )
 
     const newState = copyPage( page )
+    const og = newState.optionGroups.get( selectedOptionGroup )
     newOptions.forEach( ( o ) => {
         newState.options.set( o.id, o )
+        og.options.push( o.id )
     } )
     setPageData( newState )
 }
