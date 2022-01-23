@@ -66,7 +66,8 @@ const MobileFooterButton: React.FC<BoxExtendedProps> = ( props ) => {
 const BingoPage: React.FC<BingoPageProps> = ( props ) => {
     const getOptionsFromMode = ( mode: ModeData ) => {
         const activeOptionGroups = mode.optionGroups
-        .map( og => props.data.optionGroups.get( og ) )
+            .map( og => props.data.optionGroups.get( og ) )
+            .filter( og => !og.disabled )
 
         return activeOptionGroups.reduce(
             ( prev, current ) =>
@@ -89,9 +90,10 @@ const BingoPage: React.FC<BingoPageProps> = ( props ) => {
         history.push( props.data.root )
     } )
 
+    const enabledModes = Array.from( props.data.modes.values() ).filter( m => !m.disabled )
     const modeSelect =
-        <Select
-            options={Array.from( props.data.modes.values() )}
+        ( enabledModes.length > 1 ) && <Select
+            options={enabledModes}
             value={mode}
             onChange={( { option } ) => setMode( option )}
             labelKey="displayName"/>

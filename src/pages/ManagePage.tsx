@@ -153,6 +153,7 @@ interface ItemRowProps extends BoxExtendedProps {
     uses?: number
     usesTipThis?: string
     usesTipThat?: string
+    menuItems?: MenuItem[]
 }
 
 const ItemRow: React.FC<ItemRowProps> = ( props ) => {
@@ -193,7 +194,8 @@ const ItemRow: React.FC<ItemRowProps> = ( props ) => {
       : <Trash color="black"/>
     const nameStyle: React.CSSProperties = {
         textDecoration: props.item.deleted? "line-through" : undefined,
-        userSelect: "none"
+        userSelect: "none",
+        opacity: props.item.disabled? 0.4 : 1
     }
 
     const nameElement = (() => {
@@ -237,6 +239,13 @@ const ItemRow: React.FC<ItemRowProps> = ( props ) => {
         return true
     } )()
 
+    const usesTooltip = (() => {
+        if( props.uses === 0 ) {
+            return `This ${props.usesTipThis} is not used`
+        }
+        return `This ${props.usesTipThis} is used in ${props.uses} ${props.usesTipThat}s`
+    })()
+
     return  <Box
         alignContent="left"
         direction="row"
@@ -257,14 +266,21 @@ const ItemRow: React.FC<ItemRowProps> = ( props ) => {
             data-for="tooltip"
             data-tip={delTooltip}
             onClick={toggleDeleted}/>}
-        {!!( props.uses && props.uses > 1 ) && <Box
+        {!!( props.uses !== undefined && props.uses !== 1 ) && <Box
             background="bubble"
             pad={{ horizontal: "xsmall" }}
             round
             data-for="tooltip"
-            data-tip={`This ${props.usesTipThis} is used in ${props.uses} ${props.usesTipThat}s`}>
+            data-tip={usesTooltip}>
             <Text size="small">{props.uses}</Text>
         </Box>}
+        {props.menuItems && <Menu
+            dropAlign={{ right: "right", top: "bottom" }}
+            hoverIndicator
+            onClick={( e: React.MouseEvent ) => e.stopPropagation()}
+            items={props.menuItems}>
+            <MoreVertical />
+        </Menu>}
     </Box>
 }
 
@@ -296,6 +312,10 @@ const ModeRow:  React.FC<ModeRowProps> = ( props ) => {
         )
     }
 
+    const menuItems = [
+        { label: "Make Default", onClick: setFavorite }
+    ]
+
     const isFavorite = props.page.defaultMode == props.mode.id
     const favTooltip = `${props.mode.displayName} is the default mode`
 
@@ -310,7 +330,8 @@ const ModeRow:  React.FC<ModeRowProps> = ( props ) => {
                 item={props.mode}
                 editFn={editMode}
                 checked={!props.mode.disabled}
-                toggleChecked={toggleDisabled}>
+                toggleChecked={toggleDisabled}
+                menuItems={menuItems}>
                 <Box
                     flex={{ grow: 1, shrink: 0 }}
                     direction="row"
@@ -365,6 +386,19 @@ const OptionGroupRow:  React.FC<OptionGroupRowProps> = ( props ) => {
         )
     }
 
+    const toggleDisabled = () => {
+        editOptionGroup(
+            props.page,
+            props.setPageData,
+            props.optionGroup.id,
+            { disabled: !props.optionGroup.disabled }
+        )
+    }
+
+    const menuItems = [
+        { label: props.optionGroup.disabled? "Enable" : "Disable", onClick: toggleDisabled }
+    ]
+
     const uses = Array.from( props.page.modes.values() ).filter( ( m ) => (
         m.optionGroups.includes( props.optionGroup.id )
     ) ).length
@@ -378,6 +412,7 @@ const OptionGroupRow:  React.FC<OptionGroupRowProps> = ( props ) => {
                 uses={uses}
                 usesTipThis="group"
                 usesTipThat="mode"
+                menuItems={menuItems}
                 {...props}>
                 <Box
                     flex
@@ -421,12 +456,33 @@ const OptionRow:  React.FC<OptionRowProps> = ( props ) => {
         )
     }
 
+    const toggleDisabled = () => {
+        editOption(
+            props.page,
+            props.setPageData,
+            props.option.id,
+            { disabled: !props.option.disabled }
+        )
+    }
+
+    const menuItems = [
+        { label: props.option.disabled? "Enable" : "Disable", onClick: toggleDisabled }
+    ]
+
+    const uses = Array.from( props.page.optionGroups.values() ).filter( ( og ) => (
+        og.options.includes( props.option.id )
+    ) ).length
+
     return  <ItemRow
                 canDelete={true}
                 item={props.option}
                 editFn={editOptionGroup}
                 checked={isIncluded}
                 toggleChecked={toggleIncluded}
+                menuItems={menuItems}
+                uses={uses}
+                usesTipThis="option"
+                usesTipThat="group"
                 {...props}>
                 <Box
                     flex
