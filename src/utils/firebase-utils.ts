@@ -149,10 +149,8 @@ class Firebase {
         const pageRef = doc( this._db, "pages", user )
             .withConverter( this.pageConverter )
 
-        console.log( "Begin page write" )
         await setDoc( pageRef, data )
 
-        console.log( "Begin mode write" )
         // Write modes
         const modePromises: Promise<void>[] = []
         data.modes.forEach( ( m ) => {
@@ -168,7 +166,6 @@ class Firebase {
         } )
         await Promise.all( modePromises )
 
-        console.log( "Begin option group write" )
         // Write option groups
         const ogPromises: Promise<void>[] = []
         data.optionGroups.forEach( ( og ) => {
@@ -184,7 +181,6 @@ class Firebase {
         } )
         await Promise.all( ogPromises )
 
-        console.log( "Begin option write" )
         // Write options
         const oPromises: Promise<void>[] = []
         data.options.forEach( ( o ) => {

@@ -12,6 +12,7 @@ interface Props {
     seed: string
     options: OptionData[]
     detailed?: boolean
+    freeSpace?: boolean
 }
 
 interface BingoSquare {
@@ -99,10 +100,18 @@ export const BingoCell: React.FC<BingoCellProps> = ( props ) => {
 
 
 const BingoBoard: React.FC<Props> = ( props ) => {
-    const [ board, setBoard ] = React.useState( newBoard( props.options || [], props.seed ) )
+    const resetBoard = () => {
+        return newBoard(
+            props.options || [],
+            props.seed,
+            props.freeSpace
+        )
+    }
+
+    const [ board, setBoard ] = React.useState( resetBoard() )
 
     React.useEffect( () => {
-        setBoard( newBoard( props.options || [], props.seed ) )
+        setBoard( resetBoard() )
     }, [ props.options ] )
 
     const borderSpacing = 2;
@@ -175,8 +184,17 @@ const BingoBoard: React.FC<Props> = ( props ) => {
     )
 }
 
-const newBoard = ( options: OptionData[], seed: string ): Board => {
+const newBoard = (
+    options: OptionData[],
+    seed: string,
+    freeSpace: boolean
+): Board => {
     const rand = newRand( seed )
+
+    console.log( "free space is set to " )
+    console.log( freeSpace )
+
+    const numTiles = freeSpace? 24 : 25
 
     const newOptions = ( (): BingoOption[] => {
         const bingoOptions: BingoOption[] = options.filter( o => !o.disabled ).map( o => {
@@ -186,13 +204,15 @@ const newBoard = ( options: OptionData[], seed: string ): Board => {
             }
         } )
 
-        if( bingoOptions.length < 24 ) {
-            return bingoOptions.concat( fillerData.slice( 0, 24 - bingoOptions.length ) ).slice()
+        if( bingoOptions.length < numTiles ) {
+            return bingoOptions.concat( fillerData.slice( 0, numTiles - bingoOptions.length ) ).slice()
         }
         return bingoOptions.slice()
-    })().sort( () => 0.5 - rand() ).slice( 0, 24 )
+    })().sort( () => 0.5 - rand() ).slice( 0, numTiles )
 
-    newOptions.splice( 12, 0, "Free Space" )
+    if( freeSpace ) {
+        newOptions.splice( 12, 0, "Free Space" )
+    }
 
     const squares: BingoSquare[] = newOptions.map( ( s ) => {
 

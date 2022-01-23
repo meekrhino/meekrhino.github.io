@@ -102,6 +102,7 @@ const BingoPage: React.FC<BingoPageProps> = ( props ) => {
             {renderDesktopVersion(
                 props,
                 mode.title,
+                mode.useFreeSpace,
                 options,
                 anyTooltip,
                 info,
@@ -114,6 +115,7 @@ const BingoPage: React.FC<BingoPageProps> = ( props ) => {
             {renderMobileVersion(
                 props,
                 mode.title,
+                mode.useFreeSpace,
                 options,
                 anyTooltip,
                 info,
@@ -131,6 +133,7 @@ const BingoPage: React.FC<BingoPageProps> = ( props ) => {
 const renderDesktopVersion = (
     props: BingoPageProps,
     title: string,
+    freeSpace: boolean,
     options: OptionData[],
     anyTooltip: boolean,
     info: boolean,
@@ -165,7 +168,7 @@ const renderDesktopVersion = (
                     </Button>
                 </Row>
                 {modeSelect}
-                {renderBoard( props, options, info )}
+                {renderBoard( props, options, info, freeSpace )}
                 <StyledLink href={props.data.externalLink}>
                     {props.data.externalLinkText}
                 </StyledLink>
@@ -180,6 +183,7 @@ const renderDesktopVersion = (
 const renderMobileVersion = (
     props: BingoPageProps,
     title: string,
+    freeSpace: boolean,
     options: OptionData[],
     anyTooltip: boolean,
     info: boolean,
@@ -193,7 +197,7 @@ const renderMobileVersion = (
                 {title}
             </Header>
             <Box flex align='center' gap="medium" overflow="auto">
-                {renderBoard( props, options, info )}
+                {renderBoard( props, options, info, freeSpace )}
                 {anyTooltip && <CheckBox
                     checked={info}
                     onChange={( e ) => setInfo( e.target.checked )}
@@ -225,11 +229,13 @@ const renderMobileVersion = (
 const renderBoard = (
     props: BingoPageProps,
     options: OptionData[],
-    detailed: boolean
+    detailed: boolean,
+    freeSpace: boolean,
 ) => {
     return  <BingoBoard
                 options={options}
                 detailed={detailed}
+                freeSpace={freeSpace}
                 {...props}/>
 }
 
