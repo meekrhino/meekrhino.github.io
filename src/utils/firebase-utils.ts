@@ -1,12 +1,12 @@
 import * as FireBase from "firebase/app"
-import 'firebase/auth'
 import {
     createUserWithEmailAndPassword,
     getAuth,
     sendPasswordResetEmail,
     signInWithEmailAndPassword,
     updateEmail,
-    updatePassword
+    updatePassword,
+    updateProfile
 } from "firebase/auth"
 import 'firebase/firestore'
 import {
@@ -20,7 +20,9 @@ import {
     terminate,
     doc,
     FirestoreDataConverter,
-    deleteDoc
+    deleteDoc,
+    query,
+    where
 } from "firebase/firestore"
 import { ModeData, OptionGroupData, PageData, OptionData } from "./models"
 
@@ -78,9 +80,13 @@ class Firebase {
         password: string
      ) {
         /* Firebase auth user credential */
-        return await createUserWithEmailAndPassword(
+        const user = await createUserWithEmailAndPassword(
             getAuth( this._app ), email, password
         )
+
+        await updateProfile( user.user, { displayName: username } )
+
+        return user
     }
 
     /* Get the currently signed in user */
@@ -100,7 +106,7 @@ class Firebase {
 
     /* Sign in a user with email and password */
     signInUser = async ( email: string, password: string ) => {
-        await signInWithEmailAndPassword( getAuth( this._app ), email, password )
+        return await signInWithEmailAndPassword( getAuth( this._app ), email, password )
     }
 
     /* Sign out a user */
@@ -121,20 +127,29 @@ class Firebase {
     /**
      * Retrieve all data for the specified user's page
      */
-    getPageData = async ( user: string ) => {
-        const docRef = doc( this._db, "pages", user ).withConverter( this.pageConverter )
-        const docSnap = await getDoc( docRef )
+    getPageData = async ( root: string ) => {
+        const pagesRef = collection( this._db, "pages" )
+
+        const q = query( pagesRef, where( "root", "==", root ) ).withConverter( this.pageConverter )
+        const qSnap = await getDocs( q )
+
+        if( qSnap.empty ) {
+            console.log( "Failed to find page with root " + root )
+            return null
+        }
+
+        const docSnap = qSnap.docs[ 0 ]
 
         if( docSnap.exists ) {
             const page = docSnap.data()
-            page.modes = await this.getModeData( user )
-            page.optionGroups = await this.getOptionGroupData( user )
-            page.options = await this.getOptionData( user )
+            page.modes = await this.getModeData( docSnap.id )
+            page.optionGroups = await this.getOptionGroupData( docSnap.id )
+            page.options = await this.getOptionData( docSnap.id )
 
             return page
         }
         else {
-            console.log( "Attempted to retrieve non-existant page " + user )
+            console.log( "Attempted to retrieve non-existant page " + root )
 
             return null
         }

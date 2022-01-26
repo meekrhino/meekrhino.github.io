@@ -2,6 +2,7 @@ import { Box, BoxExtendedProps, Button, Layer, Paragraph, TextArea } from 'gromm
 import * as React from 'react'
 import styled from 'styled-components'
 import { PageData } from '../utils/models'
+import ModalBody from './ModalBody'
 
 interface OptionImportModalProps {
     show: boolean
@@ -9,19 +10,6 @@ interface OptionImportModalProps {
     confirmOptionsTooltips: ( text: string ) => void
     closeFn: () => void
 }
-
-const ModalBody: React.FC<BoxExtendedProps> = ( props ) => {
-    return <Box
-                flex={{ grow: 0 }}
-                height={{ min: "300px" }}
-                width={{ min: "300px" }}
-                direction="column"
-                align="center"
-                pad="medium"
-                gap="small"
-                {...props}/>
-}
-
 
 const OptionImportModal: React.FC<OptionImportModalProps> = ( props ) => {
     const [ text, setText ] = React.useState( "" )

@@ -6,6 +6,8 @@ import { useHistory } from 'react-router-dom';
 import { ModeData, OptionData, PageData, PageProps } from '../utils/models';
 import { BrowserView, isMobile, MobileView } from 'react-device-detect';
 import { Header } from '../components/Header';
+import AuthenticationModal from '../components/AuthenticationModal';
+import { FirebaseContext } from '../launch/app';
 
 /**
  * Assorted components
@@ -52,6 +54,12 @@ const MobileFooterButton: React.FC<BoxExtendedProps> = ( props ) => {
                 {...props}/>
 }
 
+enum Modal {
+    None,
+    LogIn,
+    Create
+}
+
 /**
  * Page props
  */
@@ -75,6 +83,9 @@ const BingoPage: React.FC<BingoPageProps> = ( props ) => {
             ), [] as OptionData[]
         )
     }
+
+    const firebase = React.useContext( FirebaseContext )
+    const [ open, setOpen ] = React.useState( Modal.None )
 
     const [ info, setInfo ] = React.useState( false )
     const history = useHistory()
@@ -100,6 +111,12 @@ const BingoPage: React.FC<BingoPageProps> = ( props ) => {
 
     const anyTooltip = !!options?.find( o => typeof o !== "string" && o.tooltip )
     return  <Box>
+        <AuthenticationModal
+            show={open != Modal.None}
+            new={open == Modal.Create}
+            create={firebase.createUser}
+            signIn={firebase.signInUser}
+            closeFn={() => setOpen( Modal.None )} />
         <BrowserView>
             {renderDesktopVersion(
                 props,
@@ -110,7 +127,10 @@ const BingoPage: React.FC<BingoPageProps> = ( props ) => {
                 info,
                 setInfo,
                 resetSeed,
-                modeSelect
+                modeSelect,
+                setOpen,
+                !!firebase.getCurrentUser(),
+                firebase.signOutUser
             )}
         </BrowserView>
         <MobileView>
@@ -141,11 +161,24 @@ const renderDesktopVersion = (
     info: boolean,
     setInfo: ( info: boolean ) => void,
     resetSeed: () => void,
-    modeSelect: JSX.Element
+    modeSelect: JSX.Element,
+    openModal: ( modal: Modal ) => void,
+    isSignedIn: boolean,
+    signOut: () => void
 ) => {
+    const signedInMenu = [
+        { label: "Sign Out", onClick: signOut }
+    ]
+
+    const signedOutMenu = [
+        { label: "Sign In", onClick: () => openModal( Modal.LogIn )},
+        { label: "New Account", onClick: () => openModal( Modal.Create )}
+    ]
+
     return  (
         <Box fill gap="small" height={{ min: "100vh" }}>
-            <Header>
+            <Header
+                menuItems={isSignedIn? signedInMenu : signedOutMenu}>
                 {title}
             </Header>
             <Box flex={{ grow: 0 }} align="center" gap="medium" overflow="auto">

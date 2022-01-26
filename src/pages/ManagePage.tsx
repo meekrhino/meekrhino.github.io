@@ -5,12 +5,10 @@ import {
     CheckBox,
     Keyboard,
     Menu,
-    Stack,
     Text,
     TextInput,
     TextInputProps,
     Notification,
-    Spinner,
     Layer
 } from 'grommet'
 import { IconButton } from 'grommet-controls'
@@ -22,6 +20,7 @@ import ReactTooltip from 'react-tooltip'
 import styled from 'styled-components'
 import { BingoCell } from '../components/BingoBoard'
 import { Header } from '../components/Header'
+import Labeled from '../components/Labeled'
 import OptionImportModal from '../components/OptionImportModal'
 import { FirebaseContext } from '../launch/app'
 import Firebase, { uid } from '../utils/firebase-utils'
@@ -39,7 +38,7 @@ interface Props {
     setDarkMode: ( darkMode: boolean ) => void
 }
 
-interface MenuItem {
+export interface MenuItem {
     label: string
     onClick: () => void
 }
@@ -100,29 +99,7 @@ const ColumnSubsection: React.FC<BoxExtendedProps> = ( props ) => {
                 {...props}/>
 }
 
-/**
- * Labeled content
- */
-interface LabeledProps extends BoxExtendedProps {
-    label: string
-    rtl?: boolean
-    labelWidth?: string
-}
-
 const defaultLabelWidth = "120px"
-const Labeled: React.FC<LabeledProps> = ( { labelWidth = defaultLabelWidth, ...props } ) => {
-    return  <Box
-                flex
-                direction="row"
-                style={{ minHeight: "unset" }}
-                align="center"
-                pad={{ horizontal: "10px", vertical: "8px" }}>
-                <Box width={{ min: labelWidth }} justify="center">
-                    <Text>{props.label}</Text>
-                </Box>
-                {props.children}
-            </Box>
-}
 
 /**
  * RTL Text Input

@@ -1,3 +1,4 @@
+import firebaseui = require('firebaseui')
 import * as React from 'react'
 import { isMobile } from 'react-device-detect'
 import { useHistory, useParams } from 'react-router-dom'
@@ -17,6 +18,7 @@ interface PageParams {
 const Page: React.FC<PageProps> = ( props ) => {
     const { page, seed } = useParams<PageParams>()
     const firebase = React.useContext( FirebaseContext )
+
     const history = useHistory()
     const [ pageData, setPageData ] = React.useState( null as PageData )
 
