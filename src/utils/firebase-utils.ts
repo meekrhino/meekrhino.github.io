@@ -127,21 +127,38 @@ class Firebase {
     /**
      * Retrieve all data for the specified user's page
      */
-    getPageData = async ( root: string ) => {
+    getPageData = async ( root: string, user?: string ) => {
         const pagesRef = collection( this._db, "pages" )
 
-        const q = query( pagesRef, where( "root", "==", root ) ).withConverter( this.pageConverter )
-        const qSnap = await getDocs( q )
+        let docSnap = null
 
-        if( qSnap.empty ) {
-            console.log( "Failed to find page with root " + root )
-            return null
+        if( user === "MeekRhino" ) {
+            const pageRef = doc( this._db, "pages", root )
+                .withConverter( this.pageConverter )
+
+            docSnap = await getDoc( pageRef )
+        }
+        else if( !user ) {
+            const q = query( pagesRef, where( "root", "==", root ) )
+                .withConverter( this.pageConverter )
+            const qSnap = await getDocs( q )
+
+            if( qSnap.empty ) {
+                console.log( "Failed to find page with root " + root )
+                return null
+            }
+
+            docSnap = qSnap.docs[ 0 ]
+        }
+        else {
+            const pageRef = doc( this._db, "pages", user )
+                .withConverter( this.pageConverter )
+
+            docSnap = await getDoc( pageRef )
         }
 
-        const docSnap = qSnap.docs[ 0 ]
-
-        if( docSnap.exists ) {
-            const page = docSnap.data()
+        const page = docSnap?.data()
+        if( page ) {
             page.modes = await this.getModeData( docSnap.id )
             page.optionGroups = await this.getOptionGroupData( docSnap.id )
             page.options = await this.getOptionData( docSnap.id )
@@ -149,7 +166,7 @@ class Firebase {
             return page
         }
         else {
-            console.log( "Attempted to retrieve non-existant page " + root )
+            console.log( "Attempted to retrieve non-existant page " + user ? user : root )
 
             return null
         }

@@ -23,6 +23,7 @@ import { Header } from '../components/Header'
 import Labeled from '../components/Labeled'
 import OptionImportModal from '../components/OptionImportModal'
 import { FirebaseContext } from '../launch/app'
+import { Tier } from '../utils/constants'
 import Firebase, { uid } from '../utils/firebase-utils'
 import {
     ItemData,
@@ -33,6 +34,7 @@ import {
 } from '../utils/models'
 
 interface Props {
+    owner: string
     data: PageData
     darkMode: boolean
     setDarkMode: ( darkMode: boolean ) => void
@@ -340,12 +342,12 @@ const OptionGroupRow:  React.FC<OptionGroupRowProps> = ( props ) => {
         Array.from( props.page.optionGroups.values() )
             .filter( og => !og.deleted ).length
 
-    const isIncluded = props.selectedMode.optionGroups.includes(
+    const isIncluded = !!props.selectedMode?.optionGroups.includes(
         props.optionGroup.id
     )
 
     const toggleIncluded = () => {
-        const includedGroups = props.selectedMode.optionGroups.slice()
+        const includedGroups = props.selectedMode?.optionGroups?.slice() || []
         const thisIndex = includedGroups.findIndex(
             ( id ) => id == props.optionGroup.id
         )
@@ -410,12 +412,12 @@ interface OptionRowProps extends BoxExtendedProps {
 }
 
 const OptionRow:  React.FC<OptionRowProps> = ( props ) => {
-    const isIncluded = props.selectedOg.options.includes(
+    const isIncluded = !!props.selectedOg?.options.includes(
         props.option.id
     )
 
     const toggleIncluded = () => {
-        const includedOptions = props.selectedOg.options.slice()
+        const includedOptions = props.selectedOg?.options.slice() || []
         const thisIndex = includedOptions.findIndex(
             ( id ) => id == props.option.id
         )
@@ -475,14 +477,26 @@ const OptionRow:  React.FC<OptionRowProps> = ( props ) => {
 const ManagePage: React.FC<Props> = ( props ) => {
     const firebase = React.useContext( FirebaseContext )
 
-    const [ pageState, setPageState ] = React.useState( copyPage( props.data ) )
+    const [ pageState, setPageState ] = React.useState( copyPage( props.data, props.owner ) )
+    React.useEffect( () => setPageState( copyPage( props.data, props.owner ) ), [ props.data ] )
+
     const [ selectedMode, setSelectedMode ] = React.useState( pageState.defaultMode )
+    React.useEffect( () => setSelectedMode( pageState.defaultMode ), [ pageState.defaultMode ] )
+
     const [ selectedOg, setSelectedOg ] = React.useState(
-        Array.from( pageState.optionGroups.values() )[ 0 ].id
+        Array.from( pageState.optionGroups.values() )[ 0 ]?.id
     )
+    React.useEffect( () => {
+        setSelectedOg( Array.from( pageState.optionGroups.values() )[ 0 ]?.id )
+    }, [ props.data ] )
+
     const [ selectedO, setSelectedO ] = React.useState(
-        Array.from( pageState.options.values() )[ 0 ].id
+        Array.from( pageState.options.values() )[ 0 ]?.id
     )
+    React.useEffect( () => {
+        setSelectedO( Array.from( pageState.options.values() )[ 0 ]?.id )
+    }, [ props.data ] )
+
     const [ showModal, setShowModal ] = React.useState( false )
     const [ changes, setChanges ] = React.useState( false )
     const [ saving, setSaving ] = React.useState( false )
@@ -508,7 +522,25 @@ const ManagePage: React.FC<Props> = ( props ) => {
         setShowModal( !showModal )
     }
 
-    console.log( "rendered" )
+    const user = firebase.getCurrentUser()?.displayName
+    if( user !== props.owner
+     && user !== "MeekRhino" ) {
+        return <Text>
+            Please verify that you are the owner of this page
+        </Text>
+    }
+
+    if( !props.data ) {
+        return <Button
+            onClick={() => commitChanges(
+                props.owner,
+                firebase,
+                pageState,
+                () => {}
+            )}>
+            Create Page
+        </Button>
+    }
 
     return <Box fill height={{ min: "100vh", max: "100vh" }}>
         <ReactTooltip
@@ -516,7 +548,7 @@ const ManagePage: React.FC<Props> = ( props ) => {
             effect="solid"
             delayShow={500}/>
         <Header>
-            {`Managing ${"lydlbutton"}'s page`}
+            {`Managing ${props.owner}'s page`}
         </Header>
         <OptionImportModal
             show={showModal}
@@ -544,6 +576,7 @@ const ManagePage: React.FC<Props> = ( props ) => {
             <ColumnSection
                 header1={
                     <PageSectionHeader
+                        owner={props.owner}
                         page={pageState}
                         firebase={firebase}
                         changes={changes}
@@ -552,6 +585,7 @@ const ManagePage: React.FC<Props> = ( props ) => {
                         clearChanges={() => setChanges( false )}/>}
                 section1={
                     <PageDataSection
+                        owner={props.owner}
                         page={pageState}
                         setPageData={setPageData}/>}
                 header2={
@@ -572,7 +606,7 @@ const ManagePage: React.FC<Props> = ( props ) => {
             <ColumnSection
                 header1={
                     <ModeDataHeader
-                        modeName={`(${pageState.modes.get( selectedMode ).displayName})`}/>}
+                        modeName={`(${pageState.modes.get( selectedMode )?.displayName})`}/>}
                 section1={
                     <ModeDataSection
                         page={pageState}
@@ -623,6 +657,7 @@ const ManagePage: React.FC<Props> = ( props ) => {
 }
 
 interface PageSectionHeaderProps {
+    owner: string
     firebase: Firebase
     page: PageData
     setSaving: ( saving: boolean ) => void
@@ -636,6 +671,7 @@ const PageSectionHeader: React.FC<PageSectionHeaderProps> = ( props ) => {
     const save = () => {
         props.setSaving( true )
         commitChanges(
+            props.owner,
             props.firebase,
             props.page,
             saveCb
@@ -671,6 +707,7 @@ const PageSectionHeader: React.FC<PageSectionHeaderProps> = ( props ) => {
  * Render page data editing section
  */
 interface PageDataSectionProps {
+    owner: string
     page: PageData
     setPageData: ( d: PageData ) => void
 }
@@ -684,7 +721,7 @@ const PageDataSection: React.FC<PageDataSectionProps> = ( props ) => {
                 <Labeled
                     label="Page URL">
                     <TextInput
-                        placeholder="lydlbutton"
+                        placeholder={props.owner}
                         value={root}
                         onChange={( e ) => setRoot( e.target.value )}
                         onBlur={() => editPage( props.page, props.setPageData, { root: root })}/>
@@ -742,7 +779,6 @@ const ItemSectionHeader: React.FC<ItemHeaderProps> = ( props ) => {
                 props.selectedParent,
                 addingName
             )
-            console.log( newItem )
             props.setSelectedItem( newItem.id )
         }
 
@@ -863,11 +899,15 @@ interface ModeDataSectionProps {
 }
 
 const ModeDataSection: React.FC<ModeDataSectionProps> = ( props ) => {
-    const [ title, setTitle ] = React.useState( props.mode.title )
+    const [ title, setTitle ] = React.useState( props.mode?.title || "" )
 
     React.useEffect( () => {
-        setTitle( props.mode.title )
-    }, [ props.mode.id ] )
+        setTitle( props.mode?.title || "" )
+    }, [ props.mode?.id ] )
+
+    if( !props.mode ) {
+        return null
+    }
 
     return  <ColumnSubsection>
                 <Labeled
@@ -931,8 +971,8 @@ const OptionGroupsSection: React.FC<OptionGroupsSectionProps> = ( props ) => {
 
     const ogList = ( Array.from( props.page.optionGroups.values() ) || [] )
         .sort( ( a, b ) => {
-            const aIsIncluded = mode.optionGroups.includes( a.id )
-            const bIsIncluded = mode.optionGroups.includes( b.id )
+            const aIsIncluded = !!mode?.optionGroups.includes( a.id )
+            const bIsIncluded = !!mode?.optionGroups.includes( b.id )
 
             if( aIsIncluded && !bIsIncluded ) {
                 return -1
@@ -950,7 +990,7 @@ const OptionGroupsSection: React.FC<OptionGroupsSectionProps> = ( props ) => {
         } )
 
     const lastIncluded = ( () => {
-        const idx = ogList.findIndex( og => !mode.optionGroups.includes( og.id ) ) - 1
+        const idx = ogList.findIndex( og => !mode?.optionGroups.includes( og.id ) ) - 1
         return idx == ogList.length? -1 : idx
     } )()
 
@@ -990,8 +1030,8 @@ const OptionsSection: React.FC<OptionsSectionProps> = ( props ) => {
 
     const oList = ( Array.from( props.page.options.values() ) || [] )
         .sort( ( a, b ) => {
-            const aIsIncluded = og.options.includes( a.id )
-            const bIsIncluded = og.options.includes( b.id )
+            const aIsIncluded = !!og?.options.includes( a.id )
+            const bIsIncluded = !!og?.options.includes( b.id )
 
             if( aIsIncluded && !bIsIncluded ) {
                 return -1
@@ -1009,7 +1049,7 @@ const OptionsSection: React.FC<OptionsSectionProps> = ( props ) => {
         } )
 
     const lastIncluded = ( () => {
-        const idx = oList.findIndex( o => !og.options.includes( o.id ) ) - 1
+        const idx = oList.findIndex( o => !og?.options.includes( o.id ) ) - 1
         return idx == oList.length? -1 : idx
     } )()
 
@@ -1049,15 +1089,19 @@ interface BodySectionProps extends BoxExtendedProps {
 const BodySection: React.FC<BodySectionProps> = ( props ) => {
     const option = props.page.options.get( props.selectedOption )
 
-    const [ text, setText ] = React.useState( option.displayName )
-    const [ tooltip, setTooltip ] = React.useState( option.tooltip )
+    const [ text, setText ] = React.useState( option?.displayName || "" )
+    const [ tooltip, setTooltip ] = React.useState( option?.tooltip || "" )
     const [ optionMarked, setOptionMarked ] = React.useState( false )
 
     React.useEffect( () => {
-        setText( option.displayName )
-        setTooltip( option.tooltip )
+        setText( option?.displayName || "" )
+        setTooltip( option?.tooltip || "" )
         setOptionMarked( false )
     }, [ props.selectedOption ] )
+
+    if( !option ) {
+        return null
+    }
 
     return  <Box
                 flex
@@ -1127,7 +1171,19 @@ const BodySection: React.FC<BodySectionProps> = ( props ) => {
 /**
  * Create page copy
  */
-const copyPage = ( page: PageData ): PageData => {
+const copyPage = ( page: PageData, owner?: string ): PageData => {
+    if( !page ) {
+        return {
+            root: owner || "",
+            tier: Tier.FREE,
+            defaultMode: "",
+            externalLink: "",
+            externalLinkText: "",
+            modes: new Map(),
+            optionGroups: new Map(),
+            options: new Map()
+        }
+    }
     return {
         ...page,
         modes: new Map( page.modes ),
@@ -1141,14 +1197,12 @@ const copyPage = ( page: PageData ): PageData => {
  * Commit function
  */
 const commitChanges = (
+    owner: string,
     firebase: Firebase,
     page: PageData,
-    saveToast?: () => void,
-    cb?: () => void
+    saveToast?: () => void
 ) => {
-
-
-    firebase.writePageData( "lydlbutton", page ).then( saveToast )
+    firebase.writePageData( owner, page ).then( saveToast )
 }
 
 
@@ -1248,9 +1302,6 @@ const newOption = (
         setPageData( newState )
 
         if( addToGroup ) {
-            console.log( addToGroup )
-            console.log( newState.optionGroups )
-            console.log( newState.optionGroups.get( addToGroup ) )
             newState.optionGroups.get( addToGroup ).options.push( newId )
         }
     }

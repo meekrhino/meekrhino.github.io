@@ -64,6 +64,7 @@ enum Modal {
  * Page props
  */
  export interface BingoPageProps extends PageProps {
+    owner: string
     data: PageData
     seed: string
 }
@@ -130,7 +131,8 @@ const BingoPage: React.FC<BingoPageProps> = ( props ) => {
                 modeSelect,
                 setOpen,
                 !!firebase.getCurrentUser(),
-                firebase.signOutUser
+                firebase.signOutUser,
+                () => history.replace( `/${props.owner}/manage`)
             )}
         </BrowserView>
         <MobileView>
@@ -164,9 +166,11 @@ const renderDesktopVersion = (
     modeSelect: JSX.Element,
     openModal: ( modal: Modal ) => void,
     isSignedIn: boolean,
-    signOut: () => void
+    signOut: () => void,
+    manage: () => void
 ) => {
     const signedInMenu = [
+        { label: "Manage", onClick: manage },
         { label: "Sign Out", onClick: signOut }
     ]
 
@@ -204,9 +208,11 @@ const renderDesktopVersion = (
                 </Row>
                 {modeSelect}
                 {renderBoard( props, options, info, freeSpace )}
-                <StyledLink href={props.data.externalLink}>
-                    {props.data.externalLinkText}
-                </StyledLink>
+                {props.data.externalLink && props.data.externalLinkText &&
+                    <StyledLink href={props.data.externalLink}>
+                        {props.data.externalLinkText}
+                    </StyledLink>
+                }
             </Box>
         </Box>
     )

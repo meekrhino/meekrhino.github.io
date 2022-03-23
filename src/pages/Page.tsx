@@ -23,22 +23,32 @@ const Page: React.FC<PageProps> = ( props ) => {
     const [ pageData, setPageData ] = React.useState( null as PageData )
 
     React.useEffect(() => {
-        firebase.getPageData( page ).then( d => setPageData( d ) )
-    }, [] )
+        if( !props.manage ) {
+            firebase.getPageData( page ).then( d => setPageData( d ) )
+        }
+        else {
+            firebase.getPageData(
+                page,
+                firebase.getCurrentUser()?.displayName
+            ).then( d => setPageData( d ) )
+        }
+    }, [ props.manage ] )
 
     if( props.manage ) {
-        if( isMobile || !pageData ) {
+        if( isMobile ) {
             return null
         }
         return <ManagePage
+                    owner={page}
                     data={pageData}
                     darkMode={props.darkMode}
-                    setDarkMode={props.setDarkMode} />
+                    setDarkMode={props.setDarkMode}/>
     }
 
     if( seed ) {
         return pageData && <BingoPage
             {...props}
+            owner={page}
             data={pageData}
             seed={seed}/>
     }

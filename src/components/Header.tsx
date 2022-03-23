@@ -20,12 +20,12 @@ interface Props extends BoxExtendedProps{
 export const Header: React.FC<Props> = ( props ) => {
     return  <Stack anchor="right">
         <StyledHeader
-        flex={false}
-        tag="header"
-        background="brand"
-        pad="small"
-        align="center"
-        {...props}>
+            flex={false}
+            tag="header"
+            background="brand"
+            pad="small"
+            align="center"
+            {...props}>
             {props.children}
         </StyledHeader>
         {props.menuItems && <Menu
