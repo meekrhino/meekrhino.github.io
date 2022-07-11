@@ -16,7 +16,9 @@ interface PageParams {
 }
 
 const Page: React.FC<PageProps> = ( props ) => {
-    const { page, seed } = useParams<PageParams>()
+    const params = useParams<PageParams>()
+    const page = params.page?.toLowerCase()
+    const seed = params.seed
     const firebase = React.useContext( FirebaseContext )
 
     const history = useHistory()
@@ -39,7 +41,6 @@ const Page: React.FC<PageProps> = ( props ) => {
             return null
         }
         return <ManagePage
-                    owner={page}
                     data={pageData}
                     darkMode={props.darkMode}
                     setDarkMode={props.setDarkMode}/>

@@ -133,7 +133,7 @@ class Firebase {
         let docSnap = null
 
         if( user === "MeekRhino" ) {
-            const pageRef = doc( this._db, "pages", root )
+            const pageRef = doc( this._db, "pages", "lydlbutton" )
                 .withConverter( this.pageConverter )
 
             docSnap = await getDoc( pageRef )
@@ -151,7 +151,7 @@ class Firebase {
             docSnap = qSnap.docs[ 0 ]
         }
         else {
-            const pageRef = doc( this._db, "pages", user )
+            const pageRef = doc( this._db, "pages", user.toLowerCase() )
                 .withConverter( this.pageConverter )
 
             docSnap = await getDoc( pageRef )
@@ -159,9 +159,10 @@ class Firebase {
 
         const page = docSnap?.data()
         if( page ) {
-            page.modes = await this.getModeData( docSnap.id )
-            page.optionGroups = await this.getOptionGroupData( docSnap.id )
-            page.options = await this.getOptionData( docSnap.id )
+            page.owner = docSnap.id.toLowerCase()
+            page.modes = await this.getModeData( page.owner )
+            page.optionGroups = await this.getOptionGroupData( page.owner )
+            page.options = await this.getOptionData( page.owner )
 
             return page
         }
@@ -176,9 +177,9 @@ class Firebase {
      * Write all page data, including modes/options/optiongroups,
      * to the firestore database
      */
-    writePageData = async ( user: string, data: PageData ) => {
+    writePageData = async ( data: PageData ) => {
         // Write page
-        const pageRef = doc( this._db, "pages", user )
+        const pageRef = doc( this._db, "pages", data.owner )
             .withConverter( this.pageConverter )
 
         await setDoc( pageRef, data )
@@ -186,7 +187,7 @@ class Firebase {
         // Write modes
         const modePromises: Promise<void>[] = []
         data.modes.forEach( ( m ) => {
-            const modeRef = doc( this._db, "pages", user, "modes", m.id )
+            const modeRef = doc( this._db, "pages", data.owner, "modes", m.id )
                 .withConverter( this.modeConverter )
 
             if( m.deleted ) {
@@ -201,7 +202,7 @@ class Firebase {
         // Write option groups
         const ogPromises: Promise<void>[] = []
         data.optionGroups.forEach( ( og ) => {
-            const ogRef = doc( this._db, "pages", user, "optionGroups", og.id )
+            const ogRef = doc( this._db, "pages", data.owner, "optionGroups", og.id )
             .withConverter( this.optionGroupConverter )
 
             if( og.deleted ) {
@@ -216,7 +217,7 @@ class Firebase {
         // Write options
         const oPromises: Promise<void>[] = []
         data.options.forEach( ( o ) => {
-            const oRef = doc( this._db, "pages", user, "options", o.id )
+            const oRef = doc( this._db, "pages", data.owner, "options", o.id )
                 .withConverter( this.optionConverter )
 
             if( o.deleted ) {
@@ -274,7 +275,7 @@ class Firebase {
     private pageConverter: FirestoreDataConverter<PageData> = {
         toFirestore: ( page: PageData ) => {
             return {
-                root: page.root,
+                root: page.root.toLowerCase(),
                 tier: page.tier,
                 defaultMode: page.defaultMode,
                 externalLink: page.externalLink,

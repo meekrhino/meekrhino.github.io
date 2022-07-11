@@ -38,7 +38,7 @@ const App = () => {
                                 render={( props ) => (
                                     <Page darkMode setDarkMode={setDarkMode} manage/>
                                 )}
-                                path={`/:page/manage`}
+                                path={`/manage`}
                             />
                             <Route
                                 exact

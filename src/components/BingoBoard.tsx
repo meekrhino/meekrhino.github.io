@@ -12,7 +12,7 @@ interface Props {
     seed: string
     options: OptionData[]
     detailed?: boolean
-    freeSpace?: boolean
+    freeSpace?: string
 }
 
 interface BingoSquare {
@@ -187,14 +187,14 @@ const BingoBoard: React.FC<Props> = ( props ) => {
 const newBoard = (
     options: OptionData[],
     seed: string,
-    freeSpace: boolean
+    freeSpace: string
 ): Board => {
     const rand = newRand( seed )
 
     const numTiles = freeSpace? 24 : 25
 
     const newOptions = ( (): BingoOption[] => {
-        const bingoOptions: BingoOption[] = options.filter( o => !o.disabled ).map( o => {
+        const bingoOptions: BingoOption[] = options.filter( o => !o.disabled && o.displayName !== freeSpace ).map( o => {
             return {
                 text: o.displayName,
                 tooltip: o.tooltip
@@ -208,7 +208,8 @@ const newBoard = (
     })().sort( () => 0.5 - rand() ).slice( 0, numTiles )
 
     if( freeSpace ) {
-        newOptions.splice( 12, 0, "Free Space" )
+        const freeOption = options.find( o => o.displayName === freeSpace )
+        newOptions.splice( 12, 0, { text: freeOption.displayName, tooltip: freeOption.tooltip } )
     }
 
     const squares: BingoSquare[] = newOptions.map( ( s ) => {

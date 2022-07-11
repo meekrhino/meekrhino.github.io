@@ -9,7 +9,8 @@ import {
     TextInput,
     TextInputProps,
     Notification,
-    Layer
+    Layer,
+    Select
 } from 'grommet'
 import { IconButton } from 'grommet-controls'
 import { Add, Checkbox, CheckboxSelected, Checkmark, Database, Favorite, MoreVertical, Trash, Undo } from 'grommet-icons'
@@ -34,7 +35,6 @@ import {
 } from '../utils/models'
 
 interface Props {
-    owner: string
     data: PageData
     darkMode: boolean
     setDarkMode: ( darkMode: boolean ) => void
@@ -477,8 +477,8 @@ const OptionRow:  React.FC<OptionRowProps> = ( props ) => {
 const ManagePage: React.FC<Props> = ( props ) => {
     const firebase = React.useContext( FirebaseContext )
 
-    const [ pageState, setPageState ] = React.useState( copyPage( props.data, props.owner ) )
-    React.useEffect( () => setPageState( copyPage( props.data, props.owner ) ), [ props.data ] )
+    const [ pageState, setPageState ] = React.useState( copyPage( props.data, firebase.getCurrentUser().displayName ) )
+    React.useEffect( () => setPageState( copyPage( props.data, firebase.getCurrentUser().displayName ) ), [ props.data ] )
 
     const [ selectedMode, setSelectedMode ] = React.useState( pageState.defaultMode )
     React.useEffect( () => setSelectedMode( pageState.defaultMode ), [ pageState.defaultMode ] )
@@ -522,18 +522,9 @@ const ManagePage: React.FC<Props> = ( props ) => {
         setShowModal( !showModal )
     }
 
-    const user = firebase.getCurrentUser()?.displayName
-    if( user !== props.owner
-     && user !== "MeekRhino" ) {
-        return <Text>
-            Please verify that you are the owner of this page
-        </Text>
-    }
-
     if( !props.data ) {
         return <Button
             onClick={() => commitChanges(
-                props.owner,
                 firebase,
                 pageState,
                 () => {}
@@ -542,13 +533,21 @@ const ManagePage: React.FC<Props> = ( props ) => {
         </Button>
     }
 
+    const user = firebase.getCurrentUser()?.displayName
+    if( user !== props.data.owner
+     && user !== "MeekRhino" ) {
+        return <Text>
+            Please verify that you are the owner of this page
+        </Text>
+    }
+
     return <Box fill height={{ min: "100vh", max: "100vh" }}>
         <ReactTooltip
             id="tooltip"
             effect="solid"
             delayShow={500}/>
         <Header>
-            {`Managing ${props.owner}'s page`}
+            {`Managing ${props.data.owner}'s page`}
         </Header>
         <OptionImportModal
             show={showModal}
@@ -576,7 +575,6 @@ const ManagePage: React.FC<Props> = ( props ) => {
             <ColumnSection
                 header1={
                     <PageSectionHeader
-                        owner={props.owner}
                         page={pageState}
                         firebase={firebase}
                         changes={changes}
@@ -585,7 +583,6 @@ const ManagePage: React.FC<Props> = ( props ) => {
                         clearChanges={() => setChanges( false )}/>}
                 section1={
                     <PageDataSection
-                        owner={props.owner}
                         page={pageState}
                         setPageData={setPageData}/>}
                 header2={
@@ -657,7 +654,6 @@ const ManagePage: React.FC<Props> = ( props ) => {
 }
 
 interface PageSectionHeaderProps {
-    owner: string
     firebase: Firebase
     page: PageData
     setSaving: ( saving: boolean ) => void
@@ -671,7 +667,6 @@ const PageSectionHeader: React.FC<PageSectionHeaderProps> = ( props ) => {
     const save = () => {
         props.setSaving( true )
         commitChanges(
-            props.owner,
             props.firebase,
             props.page,
             saveCb
@@ -707,7 +702,6 @@ const PageSectionHeader: React.FC<PageSectionHeaderProps> = ( props ) => {
  * Render page data editing section
  */
 interface PageDataSectionProps {
-    owner: string
     page: PageData
     setPageData: ( d: PageData ) => void
 }
@@ -717,11 +711,17 @@ const PageDataSection: React.FC<PageDataSectionProps> = ( props ) => {
     const [ linkText, setLinkText ] = React.useState( props.page.externalLinkText )
     const [ link, setLink ] = React.useState( props.page.externalLink )
 
+    React.useEffect( () => {
+        setRoot( props.page.root )
+        setLinkText( props.page.externalLinkText )
+        setLink( props.page.externalLink )
+    }, [ props.page ] )
+
     return  <ColumnSubsection>
                 <Labeled
                     label="Page URL">
                     <TextInput
-                        placeholder={props.owner}
+                        placeholder={props.page.owner}
                         value={root}
                         onChange={( e ) => setRoot( e.target.value )}
                         onBlur={() => editPage( props.page, props.setPageData, { root: root })}/>
@@ -900,14 +900,27 @@ interface ModeDataSectionProps {
 
 const ModeDataSection: React.FC<ModeDataSectionProps> = ( props ) => {
     const [ title, setTitle ] = React.useState( props.mode?.title || "" )
+    const freeOption = Array.from( props.page.options.values() ).find( o => o.displayName === props.mode?.useFreeSpace )
+    const [ freeSpace, setFreeSpace ] = React.useState(
+        freeOption
+    )
 
     React.useEffect( () => {
         setTitle( props.mode?.title || "" )
+        setFreeSpace( Array.from( props.page.options.values() ).find( o => o.displayName === props.mode?.useFreeSpace ) )
     }, [ props.mode?.id ] )
 
     if( !props.mode ) {
         return null
     }
+
+    const emptyOption: OptionData = {
+        disabled: true,
+        id: "",
+        displayName: "",
+        tooltip: ""
+    }
+    const freeSpaceOptions = [ emptyOption ].concat( Array.from( props.page.options.values() ) )
 
     return  <ColumnSubsection>
                 <Labeled
@@ -927,16 +940,19 @@ const ModeDataSection: React.FC<ModeDataSectionProps> = ( props ) => {
                 <Labeled
                     label="Free Space"
                     labelWidth="160px">
-                    <CheckBox
-                        reverse
-                        checked={props.mode.useFreeSpace}
-                        label={null}
-                        onChange={( e ) => editMode(
-                            props.page,
-                            props.setPageData,
-                            props.mode.id,
-                            { useFreeSpace: e.target.checked }
-                        )}/>
+                    <Select
+                        options={freeSpaceOptions}
+                        labelKey="displayName"
+                        value={freeSpace}
+                        onChange={( { value } ) => {
+                            setFreeSpace( value )
+                            editMode(
+                                props.page,
+                                props.setPageData,
+                                props.mode.id,
+                                { useFreeSpace: value?.displayName || "" }
+                        )}}
+                    />
                 </Labeled>
                 <Labeled
                     label="Column Groups"
@@ -1197,12 +1213,11 @@ const copyPage = ( page: PageData, owner?: string ): PageData => {
  * Commit function
  */
 const commitChanges = (
-    owner: string,
     firebase: Firebase,
     page: PageData,
     saveToast?: () => void
 ) => {
-    firebase.writePageData( owner, page ).then( saveToast )
+    firebase.writePageData( page ).then( saveToast )
 }
 
 
@@ -1245,7 +1260,7 @@ const newMode: newItemFn = (
         id: newId,
         title: "",
         displayName: name,
-        useFreeSpace: true,
+        useFreeSpace: "",
         groupPerColumn: false,
         disabled: false,
         optionGroups: []

@@ -132,7 +132,7 @@ const BingoPage: React.FC<BingoPageProps> = ( props ) => {
                 setOpen,
                 !!firebase.getCurrentUser(),
                 firebase.signOutUser,
-                () => history.replace( `/${props.owner}/manage`)
+                () => history.replace( `/manage`)
             )}
         </BrowserView>
         <MobileView>
@@ -157,7 +157,7 @@ const BingoPage: React.FC<BingoPageProps> = ( props ) => {
 const renderDesktopVersion = (
     props: BingoPageProps,
     title: string,
-    freeSpace: boolean,
+    freeSpace: string,
     options: OptionData[],
     anyTooltip: boolean,
     info: boolean,
@@ -224,7 +224,7 @@ const renderDesktopVersion = (
 const renderMobileVersion = (
     props: BingoPageProps,
     title: string,
-    freeSpace: boolean,
+    freeSpace: string,
     options: OptionData[],
     anyTooltip: boolean,
     info: boolean,
@@ -271,7 +271,7 @@ const renderBoard = (
     props: BingoPageProps,
     options: OptionData[],
     detailed: boolean,
-    freeSpace: boolean,
+    freeSpace: string,
 ) => {
     return  <BingoBoard
                 options={options}

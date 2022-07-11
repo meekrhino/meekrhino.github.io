@@ -7,6 +7,7 @@ export interface PageProps {
 }
 
 export interface PageData {
+    owner?: string
     root: string
     tier: Tier
     defaultMode: string
@@ -26,7 +27,7 @@ export interface ItemData {
 
 export interface ModeData extends ItemData {
     title: string
-    useFreeSpace: boolean
+    useFreeSpace: string
     groupPerColumn: boolean
     optionGroups: string[]
 }
